@@ -44,3 +44,6 @@ source("exp1_discretize.R")
 
 ## Figure 4: Choice shares and difference in time, for the first click only and for all clicks, by treatment
 source("exp1_Figure_4.R")
+
+## Figure 5: Choice shares and difference in time, first and all clicks, by relative price
+source("exp1_Figure_5.R")
