@@ -56,3 +56,29 @@ source("exp1_Figure_A3_A4.R")
 
 ## Table B.1: Dynamics of revisions: choice shares after the first click, revisions upon the second click, and choice share after two clicks
 source("exp1_Table_B1.R")
+
+
+#### Experiment 2 ####
+
+## raw data
+df <- read_csv("Data/alldata_exp2.csv")
+
+
+## data cleaning
+df <- df %>% 
+  mutate(chosen = capitalize(chosen),
+         type = capitalize(type)) %>%
+  mutate(type = if_else(type == "Decoy", "Attraction", type)) %>% 
+  filter(type != "2menu") %>% 
+  mutate(type = as.factor(type),
+         type = fct_relevel(type, "Attraction", "Similarity")) %>% 
+  mutate(chosen = as.factor(chosen),
+         chosen = fct_relevel(chosen, "Target", "Competitor"))%>% 
+  mutate(expected = case_when(type == "Attraction" ~ 0.5,
+                              TRUE ~ 0.33))
+
+## discretize the data to get a snapshot of the results every 10th of a second
+source("exp2_discretize.R")
+
+## Figure 8: Choice shares and difference in time, for the first click only and for all clicks, by effect
+source("exp2_Figure_8.R")
