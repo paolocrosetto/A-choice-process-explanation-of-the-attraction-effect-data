@@ -215,6 +215,7 @@ df <- df %>%
   left_join(markup, by = "screen") %>% 
   ungroup()
 
+
 # add another factor to identify the comparisons
 # that allow us to net out the effect of markup
 # that is, we compare T and C at the SAME level of price relative to each other
@@ -320,5 +321,6 @@ p1/p2 + plot_layout(guides = "collect") & theme(legend.position = "bottom",
                                                 legend.margin = margin(0,0,0,0),
                                                 plot.margin = unit(c(0,0,0,0), 'cm'),
                                                 legend.text = element_text(size = 15))
+
 
 ggsave("Figures/Figure_A4.png", width = 16/1.6, height = 12/1.6, units = "in", dpi = 300)
