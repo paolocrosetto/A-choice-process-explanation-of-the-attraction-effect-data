@@ -14,6 +14,7 @@ library(zoo)                 # time-series tools to discretize the dataset
 
 library(R.utils)             # misc statistic and helper functions
 
+library(kableExtra)          # to export beautiful latex tables
 
 library(hrbrthemes)          # main plotting theme
 library(ggtext)              # add markdown support to ggplot
@@ -54,4 +55,4 @@ source("exp1_Figure_5.R")
 source("exp1_Figure_A3_A4.R")
 
 ## Table B.1: Dynamics of revisions: choice shares after the first click, revisions upon the second click, and choice share after two clicks
-source("exp1_Table_B1.R")#TODO
+source("exp1_Table_B1.R")
