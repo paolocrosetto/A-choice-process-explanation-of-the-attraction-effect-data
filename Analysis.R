@@ -49,8 +49,9 @@ source("exp1_Figure_4.R")
 source("exp1_Figure_5.R")
 
 ## Figure A.3: Alternative measures of the attraction effect, by treatment
+
 ## Figure A.4: Alternative measures of the attraction effect, by relative price of the target
-source("exp1_Figure_A3_A4.R")#TODO
+source("exp1_Figure_A3_A4.R")
 
 ## Table B.1: Dynamics of revisions: choice shares after the first click, revisions upon the second click, and choice share after two clicks
 source("exp1_Table_B1.R")#TODO
