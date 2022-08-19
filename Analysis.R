@@ -91,3 +91,11 @@ source("exp2_Figure_8.R")
 
 ## Figure 9: Figures 9-10-11: all effects: choice shares and difference in time, first and all clicks, by relative price
 source("exp2_Figure_9_10_11.R")
+
+## Table B.2: Dynamics of revisions: choice shares after the first click, revisions upon the second click, and choice share after two clicks
+source("exp2_Table_B2.R")
+
+#### Samples of Experiments 1 and 2 ####
+
+## Table C.1: Control and demographics variables for both experiments
+source("all_exp_Table_C1.R")
