@@ -185,9 +185,9 @@ numeric_variables <- full_join(e1_numeric, e2_numeric, by = "variable")
 categorical_variables <- full_join(e1_cat, e2_cat, by = "variable")
 
 
-## table
+## creating the table
 
-numeric_variables %>% 
+tabC1 <- numeric_variables %>% 
   full_join(categorical_variables, by = "variable") %>% 
   select(variable, xp1share, xp1mean, xp1sd, xp1min, xp1median, xp1max, xp2share, xp2mean, xp2sd, xp2min, xp2median, xp2max) %>% 
   mutate(xp1mean = round(xp1mean, 2),
@@ -215,5 +215,10 @@ numeric_variables %>%
   pack_rows("Understanding", 1, 6) %>% 
   pack_rows("Personal Characteristics", 7, 14) %>% 
   pack_rows("Demographics", 15, 20) %>% 
-  pack_rows("Composition of the sample", 21, 23) %>% 
+  pack_rows("Composition of the sample", 21, 23) 
+
+## exporting to html and pdf
+tabC1 %>% 
   save_kable("Tables/Table_C1.html")
+tabC1 %>% 
+  save_kable("Tables/Table_C1.pdf")

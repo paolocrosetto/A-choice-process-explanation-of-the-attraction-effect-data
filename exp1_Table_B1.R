@@ -151,7 +151,8 @@ table <- table %>%
          final, share_after_second)
 
 
-table %>% 
+# creating the table
+tabB1 <- table %>% 
   ungroup() %>% 
   select(-treatment) %>% 
   # rename(" " = firstclick, "% share (time)" = first,
@@ -161,7 +162,14 @@ table %>%
   add_header_above(c("First choice" = 3, "Revision" = 3, "After revision" = 2)) %>% 
   pack_rows("Graphical", 1, 9) %>% 
   pack_rows("Numeric", 10, 18) %>% 
-  kable_styling() %>% 
-  save_kable("Tables/exp1_Table_B1.tex")
+  kable_styling() 
+
+# saving the table: html and pdf
+tabB1 %>% 
+  save_kable("Tables/Table_B1.html")
+
+tabB1 %>% 
+  save_kable("Tables/Table_B1.pdf")
+  
 
 
