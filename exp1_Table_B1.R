@@ -151,18 +151,17 @@ table <- table %>%
          final, share_after_second)
 
 
-sink("Tables/exp1_Table_B1.tex")
 table %>% 
   ungroup() %>% 
   select(-treatment) %>% 
   # rename(" " = firstclick, "% share (time)" = first,
   #        " " = secondclick, "% share (time)" = second) %>% 
-  kable("latex", booktabs = TRUE, col.names = NULL) %>% 
+  kable(col.names = NULL) %>% 
   add_header_above(c("", "share %", "time", "", "share %", "time", "", "share %")) %>% 
   add_header_above(c("First choice" = 3, "Revision" = 3, "After revision" = 2)) %>% 
   pack_rows("Graphical", 1, 9) %>% 
   pack_rows("Numeric", 10, 18) %>% 
-  kable_styling()
-sink()
+  kable_styling() %>% 
+  save_kable("Tables/exp1_Table_B1.tex")
 
 
