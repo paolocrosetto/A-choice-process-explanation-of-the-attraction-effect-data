@@ -69,9 +69,15 @@ df <- df %>%
   mutate(chosen = capitalize(chosen),
          type = capitalize(type)) %>%
   mutate(type = if_else(type == "Decoy", "Attraction", type)) %>% 
+  mutate(type = if_else(type == "Compromise", "Reverse Compromise", type)) %>% 
   filter(type != "2menu") %>% 
   mutate(type = as.factor(type),
-         type = fct_relevel(type, "Attraction", "Similarity")) %>% 
+         type = fct_relevel(type, "Attraction", "Similarity")) %>%
+  # taking care of reverse compromise
+  mutate(chosen = case_when(type == "Reverse Compromise" & chosen == "Target" ~ "Competitor",
+                            type == "Reverse Compromise" & chosen == "Decoy" ~ "Target",
+                            type == "Reverse Compromise" & chosen == "Competitor" ~ "Decoy",
+                            TRUE ~ chosen)) %>% 
   mutate(chosen = as.factor(chosen),
          chosen = fct_relevel(chosen, "Target", "Competitor"))%>% 
   mutate(expected = case_when(type == "Attraction" ~ 0.5,

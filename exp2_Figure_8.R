@@ -1,4 +1,3 @@
-
 plotme <- df %>% 
   group_by(time, level, type, subject, chosen, .drop = F) %>% 
   tally() %>% 
@@ -94,10 +93,9 @@ p2 <- plotme_diff %>%
         strip.background = element_blank(),
         plot.margin = unit(c(0,0,0,0), 'cm'))
 
-
-## putting it all together
 p1/p2 + plot_layout(heights = c(2.2,1), guides = "collect") & 
-  theme(legend.position = "bottom", legend.margin = margin(0,0,0,0))
+  theme(legend.position = "bottom", legend.margin = margin(0,0,0,0), 
+        legend.text = element_text(size = 15))
 
 # saving to file
 ggsave("Figures/Figure_8.png", width = 16/1.6, height = 9/1.6, units = "in", dpi = 300)
