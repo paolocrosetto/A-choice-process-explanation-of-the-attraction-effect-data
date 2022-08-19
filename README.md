@@ -11,6 +11,7 @@ To run the analysis you need R and the following packages (available on CRAN):
 - `hrbrthemes`, `ggtext` and `patchwork` -- a set of good-looking `ggplot` themes, tools to use markdown-formatted text in plots, and a plot-composer to patch together different plots
 - `zoo` -- a time-series library used to discretize the dataset
 - `R.utils` -- misc helper functions
+- `kableExtra` -- to create and export nice-looking tables
 
 ## How to run the analysis
 
@@ -30,7 +31,7 @@ For each figure or table in the paper, there is one dedicated file. The files ar
 Figures are saved to the `Figures/` folder. They are the high-resolution images (and do not fit well in the github preview screen) included in the paper.
 
 ### Tables
-Tables are saved to the `Tables/` folder. They contain the exact same information as in the paper, and they are formatted for use in the LaTeX source of the paper (i.e. they might not look that good on your screen). 
+Tables are saved to the `Tables/` folder. They contain the exact same information as in the paper, and they are saved both as .html and .pdf versions. They might have slight format differences from the paper final tables, as those were exported in Latex and then imported in the paper.
 
 
 ### Model setup and estimation 
