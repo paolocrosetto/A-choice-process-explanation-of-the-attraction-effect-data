@@ -88,3 +88,6 @@ source("exp2_discretize.R")
 
 ## Figure 8: Choice shares and difference in time, for the first click only and for all clicks, by effect
 source("exp2_Figure_8.R")
+
+## Figure 9: Figures 9-10-11: all effects: choice shares and difference in time, first and all clicks, by relative price
+source("exp2_Figure_9_10_11.R")
