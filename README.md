@@ -4,6 +4,7 @@ This repository contains raw data and scripts to reproduce all analyses of the p
 
 The paper can be found here: [Working Paper](https://ideas.repec.org/p/gbl/wpaper/2019-06.html)
 
+# Descriptive section of the paper
 ## Dependencies
 To run the analysis you need R and the following packages (available on CRAN):
 
@@ -34,9 +35,16 @@ Figures are saved to the `Figures/` folder. They are the high-resolution images 
 Tables are saved to the `Tables/` folder. They contain the exact same information as in the paper, and they are saved both as .html and .pdf versions. They might have slight format differences from the paper final tables, as those were exported in Latex and then imported in the paper.
 
 
-### Model setup and estimation 
+# Model setup, simulations and estimation 
+## Dependencies
 
-ALEXIA TODO
+- we use 
+
+## Functions
+
+- stan models are available in folder stan 
+
+## Simulations
 
 ## License
 
