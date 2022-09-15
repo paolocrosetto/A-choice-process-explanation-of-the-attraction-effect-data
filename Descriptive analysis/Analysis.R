@@ -24,6 +24,8 @@ library(patchwork)           # compose complex plots by patching together simple
 
 #### Experiment 1 ####
 
+setwd("Descriptive analysis/")
+
 ## raw data
 df <- read_csv("Data/alldata_exp1.csv")
 
@@ -99,3 +101,6 @@ source("Scripts/exp2_Table_B2.R")
 
 ## Table C.1: Control and demographics variables for both experiments
 source("Scripts/all_exp_Table_C1.R")
+
+## back to root directory
+setwd("..")
