@@ -6,6 +6,26 @@
 
 ## This file runs the whole analysis
 
+## Reproducibility
+##
+## We use the {groundhog} package to ensure reproducibility of our scripts
+## for info, see https://datacolada.org/100
+##
+## groundhog installes a fresh R version with all the packages downloaded **at the very date** when we wrote the script.
+## this ensures reproducibility but is very long (needs to download hundreds of packages)
+## 
+## so, you have two choices. 
+##
+## A. run with _your_ version of each package. It might or might not work. 
+##
+## B. run the version with groundhog. It takes time, but it does work.
+##
+
+## Uncomment the preferred version, then run this file. 
+
+
+## Version A. plain R
+
 
 ## Libraries and dependencies
 library(tidyverse)           # specific R dialect used in this file
@@ -19,6 +39,28 @@ library(kableExtra)          # to export beautiful latex tables
 library(hrbrthemes)          # main plotting theme
 library(ggtext)              # add markdown support to ggplot
 library(patchwork)           # compose complex plots by patching together simple plots
+
+
+
+# ## Version B. groundhog
+# library(groundhog)
+# 
+# 
+# ## Libraries and dependencies
+# dependencies <- c("tidyverse", "zoo", "R.utils", "kableExtra", 
+#                   'hrbrthemes', "ggtext", "patchwork")
+# 
+# ## use library with groundhog, that fetches packages as they were at a given date:
+# groundhog.library(dependencies, "2022-04-10", tolerate.R.version = '4.0.4')
+# 
+# ## What are packages used for:
+# #     tidyverse:  specific R dialect used in this file
+# #     zoo:        time-series tools to discretize the dataset
+# #     R.utils:    misc statistic and helper functions
+# #     kableExtra: to export beautiful latex tables
+# #     hrbrthemes: main plotting theme
+# #     ggtext:     add markdown support to ggplot
+# #     patchwork:  compose complex plots by patching together simple plots
 
 
 
