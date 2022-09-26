@@ -6,7 +6,7 @@ The paper can be found here: [Working Paper](https://ideas.repec.org/p/gbl/wpape
 
 # Descriptive section of the paper
 ## Dependencies
-To run the analysis you need R and the following packages (available on CRAN):
+To run the descriptive analysis you need R and the following packages (available on CRAN):
 
 - `tidyverse` -- a set of tools to work with tidy -- i.e. well behaved -- data. 
 - `hrbrthemes`, `ggtext` and `patchwork` -- a set of good-looking `ggplot` themes, tools to use markdown-formatted text in plots, and a plot-composer to patch together different plots
@@ -46,7 +46,13 @@ Tables are saved to the `Tables/` folder. They contain the exact same informatio
 # Model setup, simulations and estimation 
 ## Dependencies
 
-- we use 
+To run the simulations and model estimation you need R and the following packages (available on CRAN):
+
+- `rstan` and `cmdstanr` -- for Bayesian modeling and inference.
+- `posterior` and `bayesplot` -- for posterior analysis and plotting results
+- `hrbrthemes`, `ggtext` and `patchwork` -- a set of good-looking `ggplot` themes, tools to use markdown-formatted text in plots, and a plot-composer to patch together different plots
+- `R.utils` -- misc helper functions
+- `kableExtra` -- to create and export nice-looking tables
 
 ## Functions
 
