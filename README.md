@@ -81,6 +81,8 @@ To run the simulations and model estimation you need `R` and the following packa
     -   a model with revisions in choice and no mixed effects: `mlba_revision_v9_Frechet_generalized.stan`
     -   a model with revisions in choice and mixed effects: `mlba_revision_v9_Frechet_generalized_mixed.stan`
 
+We also include in the repo the `.exe` compiled versions of the `stan` models. These were compiled for Windows and might not work on your machine, but they could help in case you have troubles compiling `stan` models on Windows.
+
 ### Data
 
 Data is saved to the `data/` folder.
