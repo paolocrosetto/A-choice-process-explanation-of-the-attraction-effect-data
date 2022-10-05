@@ -1,0 +1,67 @@
+# stan_version_major = 2
+# stan_version_minor = 28
+# stan_version_patch = 2
+# model = mlba_single_v8_Frechet_generalized_model
+# method = variational
+#   variational
+#     algorithm = meanfield (Default)
+#       meanfield
+#     iter = 10000 (Default)
+#     grad_samples = 1 (Default)
+#     elbo_samples = 100 (Default)
+#     eta = 1 (Default)
+#     adapt
+#       engaged = 1 (Default)
+#       iter = 50 (Default)
+#     tol_rel_obj = 0.001
+#     eval_elbo = 100 (Default)
+#     output_samples = 2000
+# id = 1 (Default)
+# data
+#   file = C:/Users/alescia/AppData/Local/Temp/Rtmp4KhtgB/standata-8db4308b79a5.json
+# init = C:/Users/alescia/AppData/Local/Temp/Rtmp4KhtgB/init-1-8db432621c8c.json
+# random
+#   seed = 1584339822
+# output
+#   file = C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/Single_estimates/fit_gen_exp2_1-1.csv
+#   diagnostic_file = C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/Single_estimates/mlba_single_v8_Frechet_generalized-diagnostic-1.csv
+#   refresh = 100 (Default)
+#   sig_figs = -1 (Default)
+#   profile_file = C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/Single_estimates/mlba_single_v8_Frechet_generalized-profile-1.csv
+# num_threads = 1 (Default)
+# iter,time_in_seconds,ELBO
+100,9.16,-347799
+200,19.216,-5950.51
+300,28.33,-5956.57
+400,37.387,-5922.42
+500,46.233,-5989.72
+600,54.895,-6236.67
+700,63.152,-5828.25
+800,72.433,-5706.36
+900,82.402,-5369.14
+1000,92.856,-5223.8
+1100,103.319,-5217.99
+1200,114.314,-5218.81
+1300,125.16,-5223.74
+1400,136.318,-5213.55
+1500,147.852,-5224.91
+1600,159.07,-5248.54
+1700,171.269,-5216.87
+1800,185.279,-5218.46
+1900,198.923,-5209.19
+2000,217.439,-5209.3
+2100,235.555,-5210.69
+2200,252.267,-5234.25
+2300,270.625,-5207.73
+2400,290.841,-5216
+2500,308.445,-5227.3
+2600,339.021,-5211.78
+2700,359.419,-5217.6
+2800,376.306,-5217.28
+2900,392.693,-5219.76
+3000,408.689,-5239.02
+3100,426.752,-5209.95
+3200,440.933,-5211.49
+3300,458.735,-5213.33
+3400,475.819,-5209.71
+3500,490.429,-5212.34

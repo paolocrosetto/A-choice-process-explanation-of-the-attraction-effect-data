@@ -1,0 +1,1677 @@
+---
+output:                                       html_document
+editor_options:
+  chunk_output_type: console
+---
+
+
+# SIMULATIONS
+
+## doing simulations of choice, generating tables and figures
+
+```{r}
+## Menus of options for simulations
+
+# menu of options
+
+scaling<-4
+
+# attraction menus
+
+options_a<-rbind(c(6, 4, 4, 6, 6, 3.4),c(4, 6, 6, 4, 3.4, 6))/scaling
+
+#similarity menus
+
+options_s<-rbind(c(6, 4, 4, 6, 3.8, 6.2), c(4, 6, 6, 4, 6.2, 3.8))/scaling
+
+
+#compromise menus
+
+options_c<-rbind(c(6, 4, 4, 6, 8, 2), c(4, 6, 6, 4, 2, 8))/scaling
+
+
+options<-rbind(options_a,options_s,options_c)
+
+## parameters for simulations
+
+I<-1; m<-2; lam<-0.5; gamma<-3; beta<-1; k<-1; alpha<-1; stay<-1; tau<-0.1;
+```
+
+## make a choice what effect you want to graph
+
+```{r}
+# make a choice what effect you want to graph
+
+effect<-"attraction" # for attraction effect
+option<-options_a
+
+# or 
+
+effect<-"similarity"
+option<-options_s
+
+#or 
+
+effect<-"compromise"
+option<-options_c
+```
+
+## generate simulated data
+
+```{r}
+# generate simulated data
+
+J<-length(option[,1])
+
+# number of simulated choices
+
+N<-200000
+
+# obtain simulated first and second choices
+
+rt_test<-matrix(data=1,nrow=J*N,ncol=14)
+for (j in (1:J)){
+for (i in (1:N)) {
+  rt_test[(i+N*(j-1)),9:14]<-option[j,];
+  rt_test[(i+N*(j-1)),1:4]<-lba_rng(rt_test[(i+N*(j-1)),9:14],k,I,m,lam,gamma,beta,stay,tau,alpha)
+  }
+  }
+
+# save simulated choices
+
+if(effect=="attraction"){rt_test_a<-rt_test}else{if(effect=="similarity"){rt_test_s<-rt_test}else{{rt_test_c<-rt_test}}}
+```
+
+## graphing shares and generating tables of transition
+
+```{r}
+# choice shares over time, using the "share_graph" function
+
+
+share_graph(rt_test,effect)
+
+
+## tables of simulated choices, with shares of first choice, revision pattern, and shares after revision, using share_table function
+
+
+share_table(rt_test, effect)
+
+```
+
+# ESTIMATION
+
+## loading and storing data from experiment 1
+
+```{r eval=FALSE, include=FALSE}
+
+First_two_choices <- read.csv2("./data/First_five_choices_exp1.csv", sep=",")
+
+
+treatment<-car::recode(First_two_choices$treatment, "'barres'= 0 ; 'chiffres'= 1")
+type<-car::recode(First_two_choices$screentype, "'3 options CS'= 1 ; '3 options noCS'= 0; '2 options'= 2")
+choice1<-car::recode(First_two_choices$choice_1, "'target'= 1 ; 'competitor'= 2; 'decoy'= 3")
+choice2<-car::recode(First_two_choices$choice_2, "'target'= 1 ; 'competitor'= 2; 'decoy'= 3")
+choice2[is.na(choice2)] <- choice1[is.na(choice2)]
+time1<-First_two_choices$time_1/20000
+time2<-First_two_choices$time_2/20000
+time2[is.na(time2)] <- 1
+t2<-(time2-time1)*(time2<1)
+
+up<-cbind(as.numeric(First_two_choices$up_target),as.numeric(First_two_choices$up_competitor),as.numeric(First_two_choices$up_decoy))
+p<-cbind(as.numeric(First_two_choices$price_target),as.numeric(First_two_choices$price_competitor),as.numeric(First_two_choices$price_decoy))
+q<-cbind(as.numeric(First_two_choices$size_target),as.numeric(First_two_choices$size_competitor),as.numeric(First_two_choices$size_decoy))
+id<-First_two_choices$id
+
+summary(p)
+# p goes from 60 to 405 (in practice) and 0 to 500 (in theory)
+# we set pmax to 500
+# then pmin is 60/500 of pmax
+pmin<-60
+pmax<-500
+
+lp<-log(1/p)-log(1/pmax)
+
+
+summary(q)
+# q goes from 90 to 250 (in practice) and 0 to 300 (in theory)
+# we set qmin/qmax to correspond in proportion to pmin/pmax
+qmax<-300
+qmin<-qmax/pmax*pmin
+# we obtain qmin=36
+
+
+lq<-log(q)-log(qmin)
+
+
+# putting into form as rt
+
+#cbind(time1,time2)
+rt = cbind(time1,choice1,time2,choice2,type,up,lp[,1],lq[,1],lp[,2],lq[,2],lp[,3],lq[,3],id,t2,treatment)
+rt<-as.data.frame(rt)
+
+rt<-na.omit(rt) #this gets rid of all 2 menus and of all try out menus and menus with no choice made
+
+write.csv(rt,file="./data/rt_exp_1.csv", row.names = FALSE)
+
+# saving menus with a CS and three options
+
+menus_cs_exp1<-rt[rt$type==1&rt$id==626312,][,9:14]
+write.csv(menus_cs_exp1,file="./data/menus_cs_exp1.csv", row.names = FALSE)
+
+
+
+# load data locally for estimation
+rt<-read.csv("./data/rt_exp_1.csv")
+
+
+# selecting menus with a CS and three options
+
+rts_exp1<-rt[rt$type==1,1:15]
+
+# separating graphical (bar) and numeric (chifr) treatment in experiment 1
+
+rts_bar<-rts_exp1[rts$treatment==0,1:15]
+
+rts_chifr<-rts_exp1[rts$treatment==1,1:15]
+
+
+```
+
+## loading and storing data from experiment 2
+
+```{r eval=FALSE, include=FALSE}
+# experiment 2
+
+First_two_choices <- read.csv2("./data/First_two_choices_exp2.csv", sep=",")
+describe(First_two_choices)
+
+
+type<-car::recode(First_two_choices$type, "'decoy'= 1 ; 'similarity'= 2; 'compromise'= 3")
+# 1 is attraction effect, 2 is similarity, 3 is compromise --> asc
+choice1<-car::recode(First_two_choices$choice_1, "'target'= 1 ; 'competitor'= 2; 'decoy'= 3")
+# 1 2 3 are t, c, d
+choice2<-car::recode(First_two_choices$choice_2, "'target'= 1 ; 'competitor'= 2; 'decoy'= 3")
+choice2[is.na(choice2)] <- choice1[is.na(choice2)]
+time1<-First_two_choices$time_1/20000
+time2<-First_two_choices$time_2/20000
+time2[is.na(time2)] <- 1
+t2<-(time2-time1)*(time2<1)
+
+p<-cbind(as.numeric(First_two_choices$p1),as.numeric(First_two_choices$p2),as.numeric(First_two_choices$p3))
+q<-cbind(as.numeric(First_two_choices$q1),as.numeric(First_two_choices$q2),as.numeric(First_two_choices$q3))
+up<-p/q
+summary(up)
+
+id<-as.numeric(factor(First_two_choices$subject))
+
+summary(p)
+# p goes from 80 to 300 (in practice) and 0 to 500 (in theory)
+# we set pmax to 500
+# then pmin is 60/500 of pmax
+pmin<-60
+pmax<-500
+
+lp<-log(1/p)-log(1/pmax)
+summary(lp)
+
+
+summary(q)
+# q goes from 80 to 311 (in practice) and 0 to 500 (in theory)
+# we set qmin/qmax to correspond in proportion to pmin/pmax
+qmax<-500
+qmin<-qmax/pmax*pmin
+
+
+lq<-log(q)-log(qmin)
+
+summary(lq)
+
+plot(lp,lq)
+
+# putting into form as rt
+
+#cbind(time1,time2)
+rt = cbind(time1,choice1,time2,choice2,type,up,lp[,1],lq[,1],lp[,2],lq[,2],lp[,3],lq[,3],id,t2)
+
+rt<-as.data.frame(rt)
+
+# save menus
+
+menus_cs_exp2<-rt[rt$type!="2menu"&rt$id==1,][,9:14]
+write.csv(menus_cs_exp2,file="./data/menus_cs_exp2.csv", row.names = FALSE)
+
+
+rt<-na.omit(rt) #this gets rid of all 2 menus and of all try out menus and cases where no choice made
+len = length(rt[,1])
+describe(rt)
+
+write.csv(rt,file="./data/rt_exp_2.csv", row.names = FALSE)
+
+
+# load data locally for estimation
+rt<-read.csv("./data/rt_exp_2.csv")
+
+
+rts_exp2<-rt
+
+
+
+```
+
+# Evaluation with variational method
+
+```{r}
+## warning: you need to run many chains and check convergence systematically
+## in the following we run only one chain for illustration purpose, but the paper is based on running 16 chains for each regressions, and checking convergence chain by chain
+
+
+# loading models
+
+# model for first choices
+
+mod <- cmdstan_model('mlba_single_v8_Frechet_generalized.stan')
+
+# model for revised choices
+
+mod_rev2 <- cmdstan_model('mlba_revision_v9_Frechet_generalized.stan')
+
+# model with fixed effects
+
+mod_rev_mix2 <- cmdstan_model('mlba_revision_v9_Frechet_generalized_mixed.stan')
+```
+
+## choosing what dataset to run the model on
+
+```{r}
+# choose what dataset to run the model on
+
+# experiment 1, graphical treatment
+
+treatment<-"barre"; rts<-rts_bar;
+
+# experiment 1, numeric treatment
+
+treatment<-"chiffre"; rts<-rts_chifr;
+
+# experiment 2
+
+treatment<-"exp2"; rts<-rts_exp2;
+```
+
+## setting parameters for estimates including starting values
+
+```{r}
+
+
+
+ndraws<-2000 # we draw 2000 samples post estimation
+nchains<-1 # we do 16 chains for full estimations, we set nchains=1 here for demonstration purpose
+
+# starting parameters are chosen to be relatively neutral and consistent with past estimations.
+
+I<-1; m<-1; lam<-0.5; gamma<-3; beta<-1; k<-1; alpha<-1; stay<-1; tau<-0.0; 
+
+# labeling and computing the number of individuals in the dataset, for mixed estimations 
+rts[,15]<-as.integer((factor(rts[,15], levels=unique(rts[,15]))))
+NUM_INDIV=max(as.integer((factor(rts[,15], levels=unique(rts[,15])))))
+
+# setting starting values for mixed estimation
+
+k2<-rep(k,NUM_INDIV)
+tau2<-rep(tau,NUM_INDIV)
+I2<-rep(I,NUM_INDIV)
+m2<-rep(m,NUM_INDIV)
+lam2<-rep(lam,NUM_INDIV)
+gamma2<-rep(gamma,NUM_INDIV)
+beta2<-rep(beta,NUM_INDIV)
+stay2<-rep(stay,NUM_INDIV)
+```
+
+## regressions for first choices only
+
+```{r}
+for (i in (1:nchains)){
+
+fit <- mod$variational(
+  data = list(RT=rts[,1:14], LENGTH=length(rts[,1]), NUM_CHOICES=3),
+  iter = 10000,
+  output_samples = ndraws,
+  init=function () list(k=k,tau=tau,I=I,m=m,lam=lam,gamma=gamma,beta=beta,alpha=alpha),
+  output_dir = working_dir,
+  output_basename = paste("./results/fit_gen_",treatment,"_",i,sep = ""),
+  save_latent_dynamics=TRUE,
+  algorithm="meanfield",
+  tol_rel_obj=0.001,
+  grad_samples = 1,
+  elbo_samples = 100)
+
+fit$summary()
+write.csv(fit$draws(format = "df"),file=paste("./results/post_fit_draws_gen_",treatment,"_",i,".csv",sep=""))
+fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_fit_latent_gen_","_",i,treatment,sep=""), timestamp = FALSE, random = FALSE)
+}
+```
+
+## regressions including revisions in choices
+
+```{r}
+for (i in (1:nchains)){
+
+fit <- mod_rev2$variational(
+  data = list(RT=rts[,1:14], LENGTH=length(rts[,1]), NUM_CHOICES=3),
+  iter = 10000,
+  output_samples = ndraws,
+  init=function () list(I=I,m=m,lam=lam,gamma=gamma,beta=beta,stay=stay,alpha=alpha),
+  output_dir = working_dir,
+  output_basename = paste("./results/rev_fit_gen_",treatment,"_",i,sep = ""),
+  save_latent_dynamics=TRUE,
+  algorithm="meanfield",
+  tol_rel_obj=0.001,
+  elbo_samples = 100)
+fit$summary()
+
+write.csv(fit$draws(format = "df"),file=paste("./results/post_rev_fit_draws_gen_",treatment,"_",i,".csv",sep=""))
+fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_rev_fit_latent_gen_","_",i,treatment,sep=""), timestamp = FALSE, random = FALSE)
+}
+```
+
+## Regressions with revisions in choice and mixed effects
+
+```{r}
+
+for (i in (1:nchains)){
+fit <- mod_rev_mix2$variational(
+  data = list(
+    RT=rts[,1:15],
+    LENGTH=length(rts[,1]),
+    NUM_CHOICES=3,
+    NUM_INDIV=NUM_INDIV
+    ),
+  init=function () list(I=I2,m=m2,lam=lam2,gamma=gamma2,beta=beta2,stay=stay2,alpha=alpha,mu_I=I,mu_m=m,mu_lam=lam,mu_gamma=gamma,mu_beta=beta,mu_stay=stay,tau_I=I,tau_m=m,tau_lam=lam,tau_gamma=gamma,tau_beta=beta,tau_stay=stay),
+  iter = 10000,
+  output_samples = ndraws,
+  output_dir = working_dir,
+  output_basename = paste("./results/rev_mix_fit_gen_",treatment,"_",i,sep = ""),
+  save_latent_dynamics=TRUE,
+  algorithm="meanfield",
+  tol_rel_obj=0.005,
+  grad_samples = 1,
+  elbo_samples = 100)
+
+fit$summary()
+write.csv(fit$draws(format = "df"),file=paste("./results/post_rev_mix_fit_draws_gen_",treatment,"_",i,".csv",sep=""))
+fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_rev_mix_fit_latent_gen_","_",i,treatment,sep=""), timestamp = FALSE, random = FALSE)
+}
+
+
+```
+
+## checking convergence chain by chain, then storing draws and summary tables of estimates
+
+```{r}
+
+nchains<-1 # full results rely on 16 chains
+ndraws<-2000
+
+# choose what treatment to look at
+
+# experiment 1, graphical treatment
+
+treatment<-"barre";
+
+# experiment 1, numeric treatment
+
+treatment<-"chiffre";
+
+# experiment 2
+
+treatment<-"exp2";
+
+
+# then look at type of estimate
+
+# single estimates
+
+type<-"_"
+
+
+# for rev estimates
+
+type<-"_rev_"
+
+
+# for mixed estimates
+
+type<-"_rev_mix_"
+
+
+
+
+# vector to store chains
+{
+draws<-vector("list",nchains)
+
+# put all draws from all chains together for the treatment and model chosen
+
+for(i in 1:nchains){
+draws[[i]]<-read_csv(paste("./results/post",type,"fit_draws_gen_",treatment,"_",i,".csv", sep=""))
+}
+
+# concatenate all draws on all chains, for demonstration purpose only one
+
+fit<-rbind(draws[[1]])
+
+
+#fit<-rbind(draws[[1]],draws[[2]],draws[[3]],draws[[4]],draws[[5]],draws[[6]],draws[[7]],draws[[8]],draws[[9]],draws[[10]],draws[[11]],draws[[12]],draws[[13]],draws[[14]],draws[[15]],draws[[16]],draws[[17]],draws[[18]],draws[[19]],draws[[20]])
+
+# process and add column with draw number
+
+fit<-fit[,-1]
+fit<-as.data.frame(fit)
+a<-c(t(matrix(t(rep(1:nchains,ndraws)),nrow=nchains,ncol=ndraws)))
+#a<-c(t(matrix(t(rep(1:18,ndraws)),nrow=18,ncol=ndraws)))
+
+fit$.draw<-a
+fit$Chain<-a
+
+
+write.csv(fit,file=paste("./results/draws_",type,"_fit_gen_",treatment,".csv",sep=""))
+write.csv(summarise_draws(fit),file=paste("./results/summary_",type,"_fit_gen_",treatment,".csv",sep=""))
+}
+
+summarise_draws(fit)
+# checking the draws chain by chain, and identifying if some are different from others
+
+mcmc_trace(fit,pars=c("lp__"))
+mcmc_violin(fit,pars=c("lp__"))
+
+# for single estimates
+
+mcmc_hist(fit,pars=c("I","gamma","m","lam","beta","alpha"))
+mcmc_trace(fit[,],pars=c("I","gamma","m","lam","beta","alpha"))
+mcmc_violin(fit,pars=c("I","gamma","m","lam","beta","alpha"))
+
+
+# for rev estimates
+
+mcmc_hist(fit,pars=c("I","gamma","m","lam","beta","alpha","stay"))
+mcmc_trace(fit[,],pars=c("I","gamma","m","lam","beta","alpha","stay"))
+mcmc_violin(fit,pars=c("I","gamma","m","lam","beta","alpha","stay"))
+
+# for mixed estimates
+
+mcmc_hist(fit,pars=c("mu_I","mu_gamma","mu_m","mu_lam","mu_beta","alpha","mu_stay"))
+mcmc_trace(fit[,],pars=c("mu_I","mu_gamma","mu_m","mu_lam","mu_beta","alpha","mu_stay"))
+mcmc_violin(fit,pars=c("mu_I","mu_gamma","mu_m","mu_lam"))
+mcmc_violin(fit,pars=c("mu_beta","alpha","mu_stay"))
+
+
+# saving post estimates and summary table of estimates
+
+
+
+```
+
+# formatting and presenting results of estimation
+
+## summary table of model estimation results
+
+```{r}
+
+# this part uses stored estimates from the estimate files
+
+summary_single_fit_barre   <- read_csv("./results/summary___fit_gen_barre.csv")
+summary_single_fit_chiffre <- read_csv("./results/summary___fit_gen_chiffre.csv")
+summary_single_fit_exp2    <- read_csv("./results/summary___fit_gen_exp2.csv")
+summary_rev_fit_barre   <- read_csv("./results/summary__rev__fit_gen_barre.csv")
+summary_rev_fit_chiffre <- read_csv("./results/summary__rev__fit_gen_chiffre.csv")
+summary_rev_fit_exp2    <- read_csv("./results/summary__rev__fit_gen_exp2.csv")
+summary_rev_mix_fit_barre   <- read_csv("./results/summary__rev_mix__fit_gen_barre.csv")
+summary_rev_mix_fit_chiffre <- read_csv("./results/summary__rev_mix__fit_gen_chiffre.csv")
+summary_rev_mix_fit_exp2    <- read_csv("./results/summary__rev_mix__fit_gen_exp2.csv")
+
+
+formatted_single_fit_barre <- summary_single_fit_barre %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:8))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(variable,mean,confint,eff)
+
+formatted_single_fit_chiffre <- summary_single_fit_chiffre %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:8))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint,eff)
+
+formatted_single_fit_exp2 <- summary_single_fit_exp2 %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:8))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint,eff)
+
+
+formatted_rev_fit_barre <- summary_rev_fit_barre %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:9))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(variable,mean,confint,eff)
+
+formatted_rev_fit_chiffre <- summary_rev_fit_chiffre %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:9))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint,eff)
+
+formatted_rev_fit_exp2 <- summary_rev_fit_exp2 %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:9))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint,eff)
+
+
+formatted_rev_mix_fit_barre <- summary_rev_mix_fit_barre  %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:15))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(variable,mean,confint,eff)
+
+formatted_rev_mix_fit_chiffre <- summary_rev_mix_fit_chiffre  %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:15))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint,eff)
+
+formatted_rev_mix_fit_exp2 <- summary_rev_mix_fit_exp2  %>%
+  mutate_if(is.numeric, round, 2) %>%
+  slice(c(c(1:15))) %>%
+  select(variable, mean = mean, low = q5, hi = q95, eff = ess_bulk) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint,eff)
+
+
+tab <- bind_cols(formatted_single_fit_barre, formatted_single_fit_chiffre,formatted_single_fit_exp2)
+
+colnames(tab) <- c("Parameters","Mean","$90\\%$ CI","$N_{eff}$","Mean","$90\\%$ CI","$N_{eff}$","Mean","$90\\%$ CI","$N_{eff}$")
+
+tab$Parameters<-c("$LL$","$LL_a$","$I$","$m$","$\\lambda$","$\\gamma$","$\\beta$","$\\alpha$")
+
+
+x=kable(tab, format = "latex", caption = "Parameter estimates, model with only first choices", booktabs = TRUE, digits=2, escape=F) %>% save_kable(".\\tables\\tab_single.tex")
+
+
+as.pdf(tab, stem="tab_single")
+file.rename(from="tab_single.pdf",to="./tables/tab_single.pdf")
+
+
+tab <- bind_cols(formatted_rev_fit_barre, formatted_rev_fit_chiffre,formatted_rev_fit_exp2)
+
+colnames(tab) <- c("Parameters","Mean","$90\\%$ CI","$N_{eff}$","Mean","$90\\%$ CI","$N_{eff}$","Mean","$90\\%$ CI","$N_{eff}$")
+
+tab$Parameters<-c("$LL$","$LL_a$","$I$","$m$","$\\lambda$","$\\gamma$","$\\beta$","$\\stay$","$\\alpha$")
+
+
+x=kable(tab, format = "latex", caption = "Parameter estimates, model with revisions", booktabs = TRUE, digits=2, escape=F) %>% save_kable(".\\tables\\tab_rev.tex")
+
+as.pdf(tab, stem="tab_rev")
+file.rename(from="tab_rev.pdf",to="./tables/tab_rev.pdf")
+
+
+tab <- bind_cols(formatted_rev_mix_fit_barre, formatted_rev_mix_fit_chiffre,formatted_rev_mix_fit_exp2)
+
+colnames(tab) <- c("Parameters","Mean","$90\\%$ CI","$N_{eff}$","Mean","$90\\%$ CI","$N_{eff}$","Mean","$90\\%$ CI","$N_{eff}$")
+
+tab$Parameters<-c("$LL$","$LL_a$","$\\mu_I$","$\\mu_m$","$\\mu_\\lambda$","$\\mu_{\\gamma}$","$\\mu_{\\beta}$","$\\tau_I$","$\\tau_m$","$\\tau_{\\lambda}$","$\\tau_{\\gamma}$","$\\tau_{\\beta}$","$\\mu_{\\stay}$","$\\tau_{\\stay}$","$\\alpha$")
+
+
+x=kable(tab, format = "latex", caption = "Parameter estimates, mixed model with revisions", booktabs = TRUE, digits=2, escape=F) %>% save_kable(".\\tables\\tab_mixed.tex")
+
+as.pdf(tab, stem="tab_mix_rev")
+file.rename(from="tab_mix_rev.pdf",to="./tables/tab_mix_rev.pdf")
+```
+
+## extracting individual parameter estimates from mixed estimations and doing summary tables of individual estimates
+
+
+```{r}
+
+# this uses extracted summary estimates above
+
+######################
+#Barre
+#######################
+
+formatted_rev_mix_fit_barre_id <- summary_rev_mix_fit_barre %>% 
+  slice(c(15:393))%>%                                #selecting the right rows
+  separate("variable", c("param", "id")) %>%    # splitting parameter and id
+  mutate(id = as.numeric(id)) %>%                  # ID was a character, fixing (not so important but hey)
+  select(id, param, mean) %>%                      # selecting only the needed variables
+  pivot_wider(names_from = param, values_from = mean)
+
+formatted_rev_mix_fit_barre_id$alpha<-rep(formatted_rev_mix_fit_barre_id$alpha[1],64)
+formatted_rev_mix_fit_barre_id<-formatted_rev_mix_fit_barre_id[-1,]
+#formatted_rev_mix_fit_barre_id<-formatted_rev_mix_fit_barre_id[,-c(2:3)]
+
+# chiffre
+#########################
+
+formatted_rev_mix_fit_chiffre_id <- summary_rev_mix_fit_chiffre %>% 
+  slice(c(15:303)) %>%                                #selecting the right rows
+  separate("variable", into = c("param", "id")) %>%    # splitting parameter and id
+  mutate(id = as.numeric(id)) %>%                  # ID was a character, fixing (not so 
+  select(id, param, mean) %>%                      # selecting only the needed variables
+  pivot_wider(names_from = param, values_from = mean)
+
+formatted_rev_mix_fit_chiffre_id$alpha<-rep(formatted_rev_mix_fit_chiffre_id$alpha[1],49)
+formatted_rev_mix_fit_chiffre_id<-formatted_rev_mix_fit_chiffre_id[-1,]
+
+
+
+##########################
+# experiment 2
+#########################
+
+formatted_rev_mix_fit_exp2_id <- summary_rev_mix_fit_exp2 %>% 
+  slice(c(15:1203)) %>%                                #selecting the right rows
+  separate("variable", into = c("param", "id")) %>%    # splitting parameter and id
+  mutate(id = as.numeric(id)) %>%                  # ID was a character, fixing (not so important but hey)
+  select(id, param, mean) %>%                      # selecting only the needed variables
+  pivot_wider(names_from = param, values_from = mean)
+
+formatted_rev_mix_fit_exp2_id$alpha<-rep(formatted_rev_mix_fit_exp2_id$alpha[1],199)
+formatted_rev_mix_fit_exp2_id<-formatted_rev_mix_fit_exp2_id[-1,]
+
+
+# doing tables of average individual estimates
+
+
+quant <- function(x, prob, ...) quantile(x, prob=c(.05, .95),na.rm=TRUE)
+
+barre_mix<-as.tibble(cbind(colMeans(formatted_rev_mix_fit_barre_id),t(apply(formatted_rev_mix_fit_barre_id, 2, FUN = quant))))
+
+chiffre_mix<-as.tibble(cbind(colMeans(formatted_rev_mix_fit_chiffre_id),t(apply(formatted_rev_mix_fit_chiffre_id, 2, FUN = quant))))
+
+exp2_mix<-as.tibble(cbind(colMeans(formatted_rev_mix_fit_exp2_id),t(apply(formatted_rev_mix_fit_exp2_id, 2, FUN = quant))))
+
+formatted_barre_mix <- barre_mix %>%
+  select(mean = `V1`, low = `5%`, hi = `95%`) %>%
+  mutate(mean = round(mean, 2)) %>%
+  mutate(low = round(low, 2)) %>%
+  mutate(hi = round(hi, 2)) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint)
+
+formatted_chiffre_mix <- chiffre_mix %>%
+  select(mean = `V1`, low = `5%`, hi = `95%`) %>%
+  mutate(mean = round(mean, 2)) %>%
+  mutate(low = round(low, 2)) %>%
+  mutate(hi = round(hi, 2)) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint)
+
+formatted_exp2_mix <- exp2_mix %>%
+  select(mean = `V1`, low = `5%`, hi = `95%`) %>%
+  mutate(mean = round(mean, 2)) %>%
+  mutate(low = round(low, 2)) %>%
+  mutate(hi = round(hi, 2)) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint)
+
+Parameters<-c("$\\bar{N}$","$\\alpha$","$\\bar{I}$","$\\bar{m}$","$\\bar{\\lambda}$","$\\bar{\\gamma}$","$\\bar{\\beta}$","$\\bar{\\stay}$")
+tab <- cbind(Parameters,formatted_barre_mix, formatted_chiffre_mix,formatted_exp2_mix)
+
+colnames(tab) <- c("Parameters","Mean","$90\\%$ CI","Mean","$90\\%$ CI","Mean","$90\\%$ CI")
+
+
+library(kableExtra)
+x=kable(tab, format = "latex", caption = "Parameter estimates, by individual, mixed model", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/tab_mixed_individual.tex")
+
+library(latexpdf)
+as.pdf(tab, stem="mix_individual")
+file.rename(from="mix_individual.pdf",to="./tables/mix_individual.pdf")
+
+```
+
+## storing individual parameter estimates
+
+```{r}
+# doing distribution of parameter estimates, by treatment
+# but need to put variables in correct order --> c(2,5,3,4,6,7,8) is I, gamma, m, lambda, beta, stay
+
+a<-cbind(rep(1,length(formatted_rev_mix_fit_barre_id[,1])),formatted_rev_mix_fit_barre_id[,c(3,6,4,5,7,8,2)])
+colnames(a)<-c("treatment","I","gamma","m","lam","beta","stay","alpha")
+
+
+b<-cbind(rep(2,length(formatted_rev_mix_fit_chiffre_id[,1])),formatted_rev_mix_fit_chiffre_id[,c(3,6,4,5,7,8,2)])
+colnames(b)<-c("treatment","I","gamma","m","lam","beta","stay","alpha")
+c<-cbind(rep(3,length(formatted_rev_mix_fit_exp2_id[,1])),formatted_rev_mix_fit_exp2_id[,c(3,6,4,5,7,8,2)])
+colnames(c)<-c("treatment","I","gamma","m","lam","beta","stay","alpha")
+
+#individual_parameter_estimates<-a
+individual_parameter_estimates<-rbind(a,b,c)
+
+
+write.csv(individual_parameter_estimates,file="./results/individual_parameter_estimates.csv", row.names = FALSE)
+```
+
+## graphs of individual parameter estimates
+
+```{r}
+
+
+individual_parameter_estimates<-read.csv("./results/individual_parameter_estimates.csv")
+
+a<-individual_parameter_estimates$treatment
+a<-factor(a)
+#levels(a) = c("Graph")
+levels(a) = c("Graph", "Num", "Exp~2")
+individual_parameter_estimates$treatment<-a
+
+individual_parameter_estimates$lambda<-individual_parameter_estimates$lam
+
+# distribution and correlation of parameters
+
+p<-ggpairs(individual_parameter_estimates, 
+        columns = c("I", "gamma", "m","lambda","beta","stay"), 
+        ggplot2::aes(colour=factor(treatment), alpha=0.3),
+        diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"))+
+    theme_minimal()
+
+png(file=paste("./graphs/individual_parameters_correlations.png",sep=""),width=600, height=350)
+p
+dev.off()
+
+
+### Alternative code to get better resolution and consistent plot
+individual_parameter_estimates<-read.csv("./results/individual_parameter_estimates.csv") %>% as_tibble()
+
+
+plotme <- individual_parameter_estimates %>% 
+  select(treatment, I, gamma, m, lambda = lam, beta, stay) %>% 
+  mutate(treatment = case_when(treatment == 1 ~ "Graphical",
+                               treatment == 2 ~ "Numeric", 
+                               treatment == 3 ~ "Exp2")) %>% 
+  mutate(treatment = as.factor(treatment),
+         treatment = fct_relevel(treatment, "Graphical", "Numeric"))
+
+
+
+#install.packages("hrbrthemes", repos = c("https://cinc.rud.is", "https://cloud.r-project.org/"))
+## attraction
+plotme %>% 
+  ggpairs( 
+        columns = c("I","gamma","m", "lambda", "beta","stay"), 
+        ggplot2::aes(colour=factor(treatment), alpha=0.3),
+        labeller = "label_parsed",
+        diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"))+
+  hrbrthemes::theme_ipsum()
+ggsave("./graphs/individual_parameter_correlation_better.png", width = 16/1.5, height = 12/1.5, 
+       units = "in", dpi = 300)
+
+
+
+```
+
+## tables of speed, precision, bias, etc using example options and mean of individual estimates
+
+```{r}
+# spell out simulated options, a is for attraction effect, s is for similarity, c is for compromise
+
+# attraction
+scaling<-4
+
+options_a<-rbind(c(6, 4, 4, 6, 6, 3.4),c(4, 6, 6, 4, 3.4, 6))/scaling
+
+#similarity
+
+options_s<-rbind(c(6, 4, 4, 6, 3.8, 6.2), c(4, 6, 6, 4, 6.2, 3.8))/scaling
+
+
+#compromise
+
+options_c<-rbind(c(6, 4, 4, 6, 8, 2), c(4, 6, 6, 4, 2, 8))/scaling
+```
+
+# choose what options to do among the three
+
+```{r}
+effect<-"attraction"
+options<-options_a
+
+#or
+
+effect<-"similarity"
+options<-options_s
+
+#or
+
+effect<-"compromise"
+options<-options_c
+```
+
+## compute summary indicators for each effect
+
+```{r}
+individual_parameter_estimates<-read.csv("./results/individual_parameter_estimates.csv")
+
+
+J<-length(options[,1]) #(nr of menus)
+
+fit_formatted<-individual_parameter_estimates
+
+
+
+# computing the drifts and other indicators (here, adapt with alpha parameter)
+
+rep<-1 # number of repetitions, only one as deterministic here
+N<-length(fit_formatted$treatment) # number of people
+rt_test<-matrix(data=NA,nrow=J*N*rep,ncol=21) # to store estimates
+for(l in (1:rep)){
+for (j in (1:J)){
+for (i in (1:N)){
+  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
+  rt_test[((l-1)*N*J+(i+N*(j-1))),5:10]<-options[j,];
+  rt_test[((l-1)*N*J+(i+N*(j-1))),11:13]<-getDrifts(options[j,],fit_formatted$I[i],fit_formatted$m[i],fit_formatted$lam[i],fit_formatted$gamma[i],fit_formatted$beta[i]); #drifts first choice  
+
+  rt_test[((l-1)*N*J+(i+N*(j-1))),14]<-(fit_formatted$I[i]+0.15*fit_formatted$gamma[i])/gamma(1+1/fit_formatted$alpha[i]); #this is speed if there was a value difference of 0.6/4 between options, as between T and D
+  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-((fit_formatted$I[i]+0.15*fit_formatted$gamma[i])/max(fit_formatted$I[i]-0.15*fit_formatted$gamma[i],0.00000000001))^fit_formatted$alpha[i]/(1+((fit_formatted$I[i]+0.15*fit_formatted$gamma[i])/max(fit_formatted$I[i]-0.15*fit_formatted$gamma[i],0.00000000001))^fit_formatted$alpha[i]); #this is precision if there was a value difference of 0.6/4. Note need to set =1 if second is negative
+  rt_test[((l-1)*N*J+(i+N*(j-1))),16]<-fit_formatted$treatment[i];
+  rt_test[((l-1)*N*J+(i+N*(j-1))),17:19]<-(rt_test[((l-1)*N*J+(i+N*(j-1))),11:13]-fit_formatted$I[i])/fit_formatted$gamma[i]; # this is the value differences   
+
+
+  
+    rt_test[((l-1)*N*J+(i+N*(j-1))),20]<-fit_formatted$stay[i]; # this is the stay parameter
+    rt_test[((l-1)*N*J+(i+N*(j-1))),21]<-fit_formatted$alpha[i]; # this is the alpha parameter
+}
+}
+}
+
+if (effect=="attraction") {
+  rt_test_a<-rt_test
+} else if (effect=="similarity") {
+    rt_test_s<-rt_test
+} else {
+      rt_test_c<-rt_test
+      }
+```
+
+
+## once all rt_test for all effects are computed:
+
+```{r}
+# then store bias and shares depending on what was computed
+
+shares_attraction<-rt_test_a[,11:13]^rt_test_a[,21]/rowSums(rt_test_a[,11:13]^rt_test_a[,21])
+shares_similarity<-rt_test_s[,11:13]^rt_test_s[,21]/rowSums(rt_test_s[,11:13]^rt_test_s[,21])
+shares_compromise<-rt_test_c[,11:13]^rt_test_c[,21]/rowSums(rt_test_c[,11:13]^rt_test_c[,21])
+#View(shares)
+
+#bias<-rowSds(shares)
+
+
+bias_attraction<-rowSds(rt_test_a[,17:19])
+bias_similarity<-rowSds(rt_test_s[,17:19])
+bias_compromise<-rowSds(rt_test_c[,17:19])
+
+
+# once done, store in matrix
+rt_test<-rt_test_a
+#rt_test<-cbind(rt_test,bias_attraction)
+
+rt_test<-cbind(rt_test,bias_attraction,bias_similarity,bias_compromise,shares_attraction,shares_similarity,shares_compromise)
+colnames(rt_test)
+#colnames(rt_test)<-c("id","menus","rep","rep2","t1","t2","c1","c2","d1","d2","drift1","drift2","drift3","speed","precision","treatment","f1","f2","f3","stay","alpha","bias_att")
+colnames(rt_test)<-c("id","menus","rep","rep2","t1","t2","c1","c2","d1","d2","drift1","drift2","drift3","speed","precision","treatment","f1","f2","f3","stay","alpha","bias_att","bias_sim","bias_comp","target_a","comp_a","dec_a","target_s","comp_s","dec_s","target_c","comp_c","dec_c")
+
+summary(rt_test)
+
+write.csv(rt_test,file="./results/individual_indicators.csv", row.names = FALSE)
+
+
+library(tibble)
+rt_test<-as.tibble(rt_test)
+
+# summary by experiment (graphical,numeric, exp2)
+
+summary(rt_test[rt_test$treatment==1,]) 
+summary(rt_test[rt_test$treatment==2,]) 
+summary(rt_test[rt_test$treatment==3,]) 
+ 
+
+
+# then need to do average by variable id
+
+rt_test_mean<-data.frame(matrix(NA,ncol=1,nrow=length(rt_test$id)/2))
+rt_test_mean$treatment<-tapply(rt_test$treatment, rt_test$id, mean)
+
+rt_test_mean$speed<-tapply(rt_test$speed, rt_test$id, mean)
+rt_test_mean$precision<-tapply(rt_test$precision, rt_test$id, mean)
+rt_test_mean$target_a<-tapply(rt_test$target_a, rt_test$id, mean)
+rt_test_mean$comp_a<-tapply(rt_test$comp_a, rt_test$id, mean)
+rt_test_mean$dec_a<-tapply(rt_test$dec_a, rt_test$id, mean)
+rt_test_mean$bias_a<-tapply(rt_test$bias_att, rt_test$id, mean)
+
+rt_test_mean$target_s<-tapply(rt_test$target_s, rt_test$id, mean)
+rt_test_mean$comp_s<-tapply(rt_test$comp_s, rt_test$id, mean)
+rt_test_mean$dec_s<-tapply(rt_test$dec_s, rt_test$id, mean)
+rt_test_mean$bias_s<-tapply(rt_test$bias_sim, rt_test$id, mean)
+
+rt_test_mean$target_c<-tapply(rt_test$target_c, rt_test$id, mean)
+rt_test_mean$comp_c<-tapply(rt_test$comp_c, rt_test$id, mean)
+rt_test_mean$dec_c<-tapply(rt_test$dec_c, rt_test$id, mean)
+rt_test_mean$bias_c<-tapply(rt_test$bias_comp, rt_test$id, mean)
+
+rt_test_mean$stay<-tapply(rt_test$stay, rt_test$id, mean)
+
+write.csv(rt_test_mean,file="./results/individual_indicator_estimates.csv", row.names = FALSE)
+
+
+
+# graphing results, first method
+
+p_attraction<-ggpairs(rt_test_mean[,], 
+        columns = c("speed","precision","bias_a","bias_s","bias_c","stay"), 
+        ggplot2::aes(colour=factor(treatment), alpha=0.3),
+        diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"))+
+    theme_minimal()
+
+png(file=paste("./graphs/individual_indicator_correlations_attraction.png",sep=""),width=600, height=350)
+p_attraction
+dev.off()
+
+
+# graphing results, second method
+plotme <- rt_test_mean %>% 
+  select(treatment, Speed = speed, Precision = precision, bias_a, bias_s, bias_c, Stay = stay) %>% 
+  mutate(treatment = case_when(treatment == 1 ~ "Graphical",
+                               treatment == 2 ~ "Numeric", 
+                               treatment == 3 ~ "Exp2")) %>% 
+  mutate(treatment = as.factor(treatment),
+         treatment = fct_relevel(treatment, "Graphical", "Numeric"))
+
+## attraction
+plotme %>% 
+  select(treatment, Speed, Precision, Bias = bias_a, Stay) %>% 
+  ggpairs( 
+        columns = c("Speed","Precision","Bias","Stay"), 
+        ggplot2::aes(colour=factor(treatment), alpha=0.3),
+        diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"))+
+  hrbrthemes::theme_ipsum()
+ggsave("./graphs/individual_indicator_correlation_attraction_better.png", width = 16/1.5, height = 12/1.5, 
+       units = "in", dpi = 300)
+
+## similarity
+plotme %>% 
+  select(treatment, Speed, Precision, Bias = bias_s, Stay) %>% 
+  ggpairs( 
+        columns = c("Speed","Precision","Bias","Stay"), 
+        ggplot2::aes(colour=factor(treatment), alpha=0.3),
+        diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"))+
+  hrbrthemes::theme_ipsum()
+ggsave("./graphs/individual_indicator_correlation_similarity_better.png", width = 16/1.5, height = 12/1.5, 
+       units = "in", dpi = 300)
+
+## compromise
+plotme %>% 
+  select(treatment, Speed, Precision, Bias = bias_c, Stay) %>% 
+  ggpairs( 
+        columns = c("Speed","Precision","Bias","Stay"), 
+        ggplot2::aes(colour=factor(treatment), alpha=0.3),
+        diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"))+
+  hrbrthemes::theme_ipsum()
+ggsave("./graphs/individual_indicator_correlation_compromise_better.png", width = 16/1.5, height = 12/1.5, 
+       units = "in", dpi = 300)
+```
+
+## table of summary individual indicator estimates
+
+```{r}
+
+rt_test_mean <- read_csv("./results/individual_indicator_estimates.csv")
+
+rt_test_mean<-rt_test_mean[,-1]
+
+rt_test_mean<-as.data.frame(rt_test_mean)
+#library(doBy)
+# 
+# indicators_att<-summaryBy(speed + precision + bias_att + stay ~ treatment, data = rt_test_mean,
+#   FUN = function(x) { c(m = mean(x), q5 = quantile(x, probs = 0.05), q95 = quantile(x, probs = 0.95)) } )
+
+ff_d <- melt(rt_test_mean, id.vars="treatment", na.rm=TRUE)
+cast_ff_d<-cast(ff_d, variable ~ treatment, function(x) c(mean(x), quantile(x,c(0.05,0.95))))
+
+formatted_indicators_1 <- cast_ff_d %>%
+  select(variable= variable, mean = `1_X`, low = `1_X5.`, hi = `1_X95.`) %>%
+  mutate(mean = round(mean, 2)) %>%
+  mutate(low = round(low, 2)) %>%
+  mutate(hi = round(hi, 2)) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(variable, mean,confint)
+
+formatted_indicators_2 <- cast_ff_d %>%
+  select(variable= variable, mean = `2_X`, low = `2_X5.`, hi = `2_X95.`) %>%
+  mutate(mean = round(mean, 2)) %>%
+  mutate(low = round(low, 2)) %>%
+  mutate(hi = round(hi, 2)) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint)
+
+formatted_indicators_3 <- cast_ff_d %>%
+  select(variable= variable, mean = `3_X`, low = `3_X5.`, hi = `3_X95.`) %>%
+  mutate(mean = round(mean, 2)) %>%
+  mutate(low = round(low, 2)) %>%
+  mutate(hi = round(hi, 2)) %>%
+  mutate(confint = paste0("[", low ,";",hi,"]")) %>%
+  select(mean,confint)
+
+Parameters<-c("Mean","$90\\%$ CI","Mean","$90\\%$ CI","Mean","$90\\%$ CI")
+tab <- cbind(formatted_indicators_1, formatted_indicators_2, formatted_indicators_3)
+
+library(kableExtra)
+x=kable(tab, format = "latex", caption = "Indicator estimates, by individual, mixed model", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/tab_mixed_individual_indicators.tex")
+
+library(latexpdf)
+as.pdf(tab, stem="mix_individual_indicators")
+file.rename(from="mix_individual_indicators.pdf",to="./tables/mix_individual_indicators.pdf")
+
+
+
+write.csv(tab,file="./results/individual_indicator_estimates_stats.csv", row.names = FALSE)
+
+
+
+```
+
+## clustering individuals to define types
+
+```{r tidy=TRUE}
+library(readr)
+individual_indicator_estimates <- read_csv("./results/individual_indicator_estimates.csv")
+individual_indicator_estimates <- individual_indicator_estimates[,-1]
+individual_indicator<-as.matrix(individual_indicator_estimates[,c("speed","precision","stay","bias_a")])
+library(stats)
+library(cluster)
+data<-daisy(individual_indicator,metric="euclidean",stand=TRUE)
+
+mydata <- data
+wss<-c(1:15)
+  for (i in 1:15) wss[i] <- sum(kmeans(mydata,
+                                       centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
+
+
+library(fpc)
+pamk.best <- pamk(mydata)
+cat("number of clusters estimated by optimum average silhouette width:", pamk.best$nc, "\n")
+plot(pam(mydata, pamk.best$nc))
+Oasw<-pamk.best$pamobject$clustering
+
+asw <- numeric(20)
+for (k in 2:20)
+  asw[[k]] <- pam(mydata, k) $ silinfo $ avg.width
+k.best <- which.max(asw)
+cat("silhouette-optimal number of clusters:", k.best, "\n")
+sonc<-pam(mydata, k.best)$clustering
+
+require(vegan)
+fit <- cascadeKM(scale(mydata, center = TRUE,  scale = TRUE), 1, 10, iter = 1000)
+plot(fit, sortg = TRUE, grpmts.plot = TRUE)
+calinski.best <- as.numeric(which.max(fit$results[2,]))
+cat("Calinski criterion optimal number of clusters:", calinski.best, "\n")
+
+fourclusterC<-fit$partition[,calinski.best]
+twoclusterC<-fit$partition[,2]
+
+library(mclust)
+# Run the function to see how many clusters
+# it finds to be optimal, set it to search for
+# at least 1 model and up 20.
+d_clust <- Mclust(as.matrix(mydata), G=1:20)
+m.best <- dim(d_clust$z)[2]
+cat("model-based optimal number of clusters:", m.best, "\n")
+# 4 clusters
+plot(d_clust)
+```
+
+
+```{r tidy=TRUE}
+d_dist <- dist(as.matrix(mydata))   # find distance matrix 
+plot(hclust(d_dist))           # apply hierarchical clustering and plot
+
+
+data.kmeans<-kmeans(data,centers=2)
+twocluster<-data.kmeans$cluster
+data.kmeans<-kmeans(data,centers=4)
+fourcluster<-data.kmeans$cluster
+
+individual_indicator_estimates<-cbind(individual_indicator_estimates,twocluster,fourcluster)
+
+# correlation across different groupings and treatments
+
+individual_indicator_estimates %>% 
+  select(treatment, twocluster,fourcluster) -> dataggpairs
+
+  
+plot(jitter(individual_indicator_estimates$twocluster),jitter(individual_indicator_estimates$fourcluster))
+
+
+twocluster <- individual_indicator_estimates %>% drop_na() %>% 
+  dplyr::group_by(twocluster,treatment)%>%
+  dplyr::summarize(treatment = mean(treatment),
+            speed = mean(speed),
+            precision = mean(precision),
+            bias = mean(bias_a),
+            stay = mean(stay),
+            N = length(stay))
+
+twoclusteroverall <- individual_indicator_estimates %>% drop_na() %>% 
+  dplyr::group_by(twocluster)%>%
+  dplyr::summarize(speed = mean(speed),
+            precision = mean(precision),
+            bias = mean(bias_a),
+            stay = mean(stay),
+            N = length(stay))
+
+
+fourcluster <- individual_indicator_estimates %>% drop_na() %>% 
+  dplyr::group_by(fourcluster,treatment)%>%
+  dplyr::summarize(treatment = mean(treatment),
+            speed = mean(speed),
+            precision = mean(precision),
+            bias = mean(bias_a),
+            stay = mean(stay),
+            N = length(stay))
+
+fourclusteroverall <- individual_indicator_estimates %>% drop_na() %>% 
+  dplyr::group_by(fourcluster)%>%
+  dplyr::summarize(speed = mean(speed),
+            precision = mean(precision),
+            bias = mean(bias_a),
+            stay = mean(stay),
+            N = length(stay))
+
+
+
+cols <- c("#CFD8DC", "#90A4AE", "#455A64")
+
+# graphing results of two cluster estimates to identify significant differences
+
+individual_indicator_estimates$twocluster<-as.factor(individual_indicator_estimates$twocluster)
+
+ggplot(individual_indicator_estimates, aes(x = twocluster, y = speed, fill = twocluster)) + 
+  stat_boxplot(geom = "errorbar",
+               width = 0.25) + 
+  geom_boxplot(alpha = 0.8,          # Fill transparency
+               colour = "#474747",   # Border color
+               outlier.colour = 1)  # Outlier color
+  
+ggplot(individual_indicator_estimates, aes(x = twocluster, y = precision, fill = twocluster)) + 
+  stat_boxplot(geom = "errorbar",
+               width = 0.25) + 
+  geom_boxplot(alpha = 0.8,          # Fill transparency
+               colour = "#474747",   # Border color
+               outlier.colour = 1)  # Outlier color
+
+ggplot(individual_indicator_estimates, aes(x = twocluster, y = bias_a, fill = twocluster)) + 
+  stat_boxplot(geom = "errorbar",
+               width = 0.25) + 
+  geom_boxplot(alpha = 0.8,          # Fill transparency
+               colour = "#474747",   # Border color
+               outlier.colour = 1)  # Outlier color
+
+ggplot(individual_indicator_estimates, aes(x = twocluster, y = stay, fill = twocluster)) + 
+  stat_boxplot(geom = "errorbar",
+               width = 0.25) + 
+  geom_boxplot(alpha = 0.8,          # Fill transparency
+               colour = "#474747",   # Border color
+               outlier.colour = 1)  # Outl
+  
+
+write.csv(twocluster,file="./tables/twocluster.csv", row.names = FALSE)
+write.csv(fourcluster,file="./tables/fourcluster.csv", row.names = FALSE)
+
+
+library(kableExtra)
+x=kable(twocluster, format = "latex", caption = "Indicator estimates, by type and treatment, two clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_two_cluster.tex")
+x=kable(fourcluster, format = "latex", caption = "Indicator estimates, by type and treatment, four clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_four_cluster.tex")
+x=kable(twoclusteroverall, format = "latex", caption = "Indicator estimates, by type, two clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_two_cluster_overall.tex")
+x=kable(fourclusteroverall, format = "latex", caption = "Indicator estimates, by type, four clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_four_clusteroverall.tex")
+
+
+as.pdf(twocluster, stem="indicators_by_types_two_cluster")
+file.rename(from="indicators_by_types_two_cluster.pdf",to="./tables/indicators_by_types_two_cluster.pdf")
+
+as.pdf(fourcluster, stem="indicators_by_types_four_cluster")
+file.rename(from="indicators_by_types_four_cluster.pdf",to="./tables/indicators_by_types_four_cluster.pdf")
+
+as.pdf(twoclusteroverall, stem="indicators_by_types_two_cluster_overall")
+file.rename(from="indicators_by_types_two_cluster_overall.pdf",to="./tables/indicators_by_types_two_cluster_overall.pdf")
+
+as.pdf(fourclusteroverall, stem="indicators_by_types_four_cluster_overall")
+file.rename(from="indicators_by_types_four_cluster_overall.pdf",to="./tables/indicators_by_types_four_cluster_overall.pdf")
+
+
+# # generating tables with 90% confidence intervals
+# 
+# library(dplyr)
+# library(reshape)
+# library(tibble)
+# individual_indicator_estimates<-as.data.frame(individual_indicator_estimates)
+# ff_2 <- melt(individual_indicator_estimates[,c("fourcluster","treatment","speed","precision","bias_a","stay")], id.vars=c("fourcluster"), na.rm=TRUE)
+# cast_ff_2<-cast(ff_2, variable ~ fourcluster, function(x) c(mean(x), quantile(x,c(0.05,0.95))))
+
+
+```
+
+
+# POST ESTIMATION
+## doing graphs of post-estimated choices over time using mean parameters of mixed models
+
+```{r}
+draws_rev_mix_fit_barre   <- read_csv("./results/draws__rev_mix__fit_gen_barre.csv")
+draws_rev_mix_fit_chiffre <- read_csv("./results/draws__rev_mix__fit_gen_chiffre.csv")
+draws_rev_mix_fit_exp2    <- read_csv("./results/draws__rev_mix__fit_gen_exp2.csv")
+
+# for experiment 1
+  options <- read_csv("data/menus_cs_exp1.csv")
+  options<-matrix(unlist(options), ncol=6,)
+  J<-length(options[,1]) #(nr of menus)
+  effect<-"attr"
+
+    # graphical treatment
+    treatment<-"exp1_barre"
+    ndraws<-length(draws_rev_mix_fit_barre$alpha)
+    N<-round(1000000/J,0) # number of draws to take up
+    selected<-sample(ndraws, N, replace=TRUE)
+    draws <- draws_rev_mix_fit_barre[selected,c(4:8,14,16)] 
+  
+    # numeric treatment
+    treatment<-"exp1_chiffre"
+    ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
+    N<-round(1000000/J,0) # number of draws to take up
+    selected<-sample(ndraws, N, replace=TRUE)
+    draws <- draws_rev_mix_fit_chiffre[selected,c(4:8,14,16)]
+
+# for experiment 2
+
+  treatment<-"exp2"
+  
+  options <- read_csv("./data/menus_cs_exp2.csv")
+  options_a<-options[1:12,]
+  options_s<-options[13:24,]
+  options_c<-options[25:36,]
+  
+  # then choose what effect to look at
+  effect<-"attr"
+  options<-options_a
+  # or
+  effect<-"sim"
+  options<-options_s
+  # or
+  effect<-"comp"
+  options<-options_c
+  
+  #then
+  
+  options<-matrix(unlist(options), ncol=6,)
+  J<-length(options[,1]) #(nr of menus)
+
+  # if keep all draws, too big matrix, so we select a sample of rows in draws
+  ndraws<-length(draws_rev_mix_fit_exp2$alpha)
+  N<-round(1000000/J,0) # number of draws to take up
+  selected<-sample(ndraws, N, replace=TRUE)
+  draws <- draws_rev_mix_fit_exp2[selected,c(4:8,14,16)] 
+
+```
+
+
+```{r}
+# then generate rt post based on parameter estimates, given a choice above
+
+# what parameters
+k<-1
+tau_sim<-0.1 # to introduce random choices at beginning
+
+
+l<-1
+
+
+rt_test<-matrix(data=NA,nrow=J*N,ncol=15)
+for (j in (1:J)){
+for (i in (1:N)){
+  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-1;
+  rt_test[((l-1)*N*J+(i+N*(j-1))),5:8]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
+  rt_test[((l-1)*N*J+(i+N*(j-1))),9:14]<-options[j,];
+  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-lba_rng(options[j,],k,draws$mu_I[i],draws$mu_m[i],draws$mu_lam[i],draws$mu_gamma[i],draws$mu_beta[i],draws$mu_stay[i],tau_sim,draws$alpha[i])
+  }
+}
+
+# save rttest depending on situation chosen above
+write.csv(rt_test,file=paste("./results/post_estimates_",treatment,"_",effect,".csv",sep=""), row.names = FALSE)
+```
+
+
+## graphing post_estimates
+
+```{r}
+
+# choose among:
+
+effect<-"attr"
+effect<-"sim"
+effect<-"comp"
+treatment<-"exp1_barre"
+treatment<-"exp1_chiffre"
+treatment<-"exp2"
+
+rt_test<-read.csv(paste("./results/post_estimates_",treatment,"_",effect,".csv",sep=""))
+
+#then
+
+# get rid of no choices
+length(rt_test[rt_test[,1]<1,])
+length(rt_test)
+#rt_test<-rt_test[rt_test[,1]<1,]
+1-length(rt_test[rt_test[,1]<1,])/length(rt_test)
+
+# we compute how many switch in choices there are by looking at how many t2=1 there are, in proportions (those are no switch)
+1-length(rt_test[rt_test[,3]==1,1])/length(rt_test[,1]) 
+
+
+# checking the shares
+
+
+# first choices
+table_ex_xtabs1 <- xtabs(~V2, data=rt_test)
+table_ex_xtabs1/(J*N)
+
+# second choices, by menu
+table_ex_xtabs2 <- xtabs(~V4, data=rt_test)
+table_ex_xtabs2/(J*N)
+
+# choice shares over time
+# do graphs using # share choice function in "model and simulation"
+memory.limit() 
+memory.limit(40000)
+share_graph(rt_test,paste(treatment,"_",effect,sep=""))
+
+# still need to do transition tables
+# for this go to step 1 and choose to save tables in Postestimated_graphs
+
+```
+
+## ALTERNATIVE TO CHECK THERE IS NO DIFFERENCE WHETHER WE USE MEAN INDIVIDUAL ESTIMATES OR A DRAW OF INDIVIDUAL ESTIMATES
+## doing graphs of post-estimated choices over time using individual parameters of mixed models
+
+```{r}
+
+draws_rev_mix_fit_barre   <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_barre.csv")
+draws_rev_mix_fit_chiffre <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_chiffre.csv")
+draws_rev_mix_fit_exp2    <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_exp2.csv")
+
+# for experiment 1
+options <- read_csv("menus_cs_exp1.csv")
+options<-matrix(unlist(options), ncol=6,)
+J<-length(options[,1]) #(nr of menus)
+effect<-"attraction"
+
+# if barre
+treatment<-"exp1_barre"
+indiv<-63
+draws<-draws_rev_mix_fit_barre[,c(4:8,14,16)]
+ndraws<-length(draws_rev_mix_fit_barre$alpha)
+N<-round(1000000/indiv/J,0) # number of draws to take up
+selected<-sample(ndraws, N)
+draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
+
+# if chiffre
+treatment<-"exp1_chiffre"
+indiv<-48
+draws<-draws_rev_mix_fit_chiffre[,c(4:8,14,16)]
+ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
+N<-round(1000000/indiv/J,0) # number of draws to take up
+selected<-sample(ndraws, N)
+draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
+
+# for experiment 2
+
+treatment<-"exp2"
+
+options <- read_csv("menus_cs_exp2.csv")
+options_a<-options[1:12,]
+options_s<-options[13:24,]
+options_c<-options[25:36,]
+
+# then either
+effect<-"attraction"
+options<-options_a
+# or
+effect<-"similarity"
+options<-options_s
+# or
+effect<-"compromise"
+options<-options_c
+
+
+options<-matrix(unlist(options), ncol=6,)
+J<-length(options[,1]) #(nr of menus)
+
+indiv<-198
+draws<-draws_rev_mix_fit_exp2[,c(4:8,14,16)]
+ndraws<-length(draws_rev_mix_fit_exp2$alpha)
+N<-round(1000000/indiv/J,0) # number of draws to take up
+selected<-sample(ndraws, N)
+draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
+
+
+
+
+
+
+# then extract parameters
+
+draws_id_alpha <- as.matrix(draws_id[,1])
+draws_id_I <- as.matrix(draws_id[,c((2):(1+indiv))])
+draws_id_m <- as.matrix(draws_id[,c((2+indiv):(1+2*indiv))])
+draws_id_lam <- as.matrix(draws_id[,c((2+2*indiv):(1+3*indiv))])
+draws_id_gamma <- as.matrix(draws_id[,c((2+3*indiv):(1+4*indiv))])
+draws_id_beta <- as.matrix(draws_id[,c((2+4*indiv):(1+5*indiv))])
+draws_id_stay <- as.matrix(draws_id[,c((2+5*indiv):(1+6*indiv))])
+
+View(draws_id_I)
+
+
+# what parameters
+k<-1
+tau_sim<-0.01 # to introduce random choices at beginning
+# if keep all draws, too big matrix
+
+
+
+
+rt_test<-matrix(data=NA,nrow=J*N*indiv,ncol=15)
+for(l in (1:indiv)){
+for (j in (1:J)){
+for (i in (1:N)){
+  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-1;
+  rt_test[((l-1)*N*J+(i+N*(j-1))),5:8]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
+  rt_test[((l-1)*N*J+(i+N*(j-1))),9:14]<-options[j,];
+  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-lba_rng(options[j,],k,draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l],draws_id_stay[i,l],tau_sim,draws_id_alpha[i])
+  }
+}
+}
+
+
+# save rttest depending on situation as
+rt_test_exp1_barre_attr<-rt_test
+rt_test_exp1_chiffre_attr<-rt_test
+rt_test_exp2_attr<-rt_test
+rt_test_exp2_sim<-rt_test
+rt_test_exp2_comp<-rt_test
+
+#summary(rt_test)
+#View(rt_test)
+#hist(rt_test[,1],probability=T)
+
+# get rid of no choices
+length(rt_test[rt_test[,1]<1,])
+length(rt_test)
+#rt_test<-rt_test[rt_test[,1]<1,]
+1-length(rt_test[rt_test[,1]<1,])/length(rt_test)
+
+# we compute how many switch in choices there are by looking at how many t2=1 there are, in proportions (those are no switch)
+1-length(rt_test[rt_test[,3]==1,1])/length(rt_test[,1]) 
+
+
+# checking the shares
+
+
+# first choices
+table_ex_xtabs1 <- xtabs(~V2, data=rt_test)
+table_ex_xtabs1/(J*N*indiv)
+
+# second choices, by menu
+table_ex_xtabs2 <- xtabs(~V4, data=rt_test)
+table_ex_xtabs2/(J*N*indiv)
+
+# choice shares over time
+# do graphs using # share choice function in "data and regression"
+memory.limit() 
+memory.limit(40000)
+share_graph(rt_test,paste(treatment,"_",effect,sep=""))
+
+# still need to do transition tables
+# for this go to step 1 and choose to save tables in Postestimated_graphs
+
+```
+
+## alternative way to compute speed, precision and bias using draws of individual parameters of mixed models and example options
+
+```{r}
+
+draws_rev_mix_fit_barre   <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_barre.csv")
+draws_rev_mix_fit_chiffre <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_chiffre.csv")
+draws_rev_mix_fit_exp2    <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_exp2.csv")
+
+# choose what options to do among the three
+
+
+effect<-"attraction"
+options<-options_a
+
+#or
+
+effect<-"similarity"
+options<-options_s
+
+#or
+
+effect<-"compromise"
+options<-options_c
+
+
+#then
+
+options<-matrix(unlist(options), ncol=6,)
+J<-length(options[,1]) #(nr of menus)
+
+# if barre
+treatment<-"exp1_barre"
+indiv<-63
+ndraws<-length(draws_rev_mix_fit_barre$alpha)
+N<-round(1000000/indiv/J,0) # number of draws to take up
+selected<-sample(ndraws, N)
+draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
+
+# if chiffre
+treatment<-"exp1_chiffre"
+indiv<-48
+ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
+N<-round(1000000/indiv/J,0) # number of draws to take up
+selected<-sample(ndraws, N)
+draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
+
+# for experiment 2
+
+treatment<-"exp2"
+indiv<-198
+ndraws<-length(draws_rev_mix_fit_exp2$alpha)
+N<-round(1000000/indiv/J,0) # number of draws to take up
+selected<-sample(ndraws, N)
+draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
+
+
+
+
+
+
+# then extract parameters
+
+draws_id_alpha <- as.matrix(draws_id[,1])
+draws_id_I <- as.matrix(draws_id[,c((2):(1+indiv))])
+draws_id_m <- as.matrix(draws_id[,c((2+indiv):(1+2*indiv))])
+draws_id_lam <- as.matrix(draws_id[,c((2+2*indiv):(1+3*indiv))])
+draws_id_gamma <- as.matrix(draws_id[,c((2+3*indiv):(1+4*indiv))])
+draws_id_beta <- as.matrix(draws_id[,c((2+4*indiv):(1+5*indiv))])
+draws_id_stay <- as.matrix(draws_id[,c((2+5*indiv):(1+6*indiv))])
+
+#View(draws_id_I)
+
+
+# what parameters
+k<-1
+tau_sim<-0.01 # to introduce random choices at beginning
+# if keep all draws, too big matrix
+
+i<-j<-l<-1
+draws_id_m[i,l]
+
+c(options[j,],k,draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l])
+
+getDrifts(options[j,],draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l])
+
+
+rt_test<-matrix(data=NA,nrow=J*N*indiv,ncol=21)
+for(l in (1:indiv)){
+for (j in (1:J)){
+for (i in (1:N)){
+  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
+  rt_test[((l-1)*N*J+(i+N*(j-1))),5:10]<-options[j,];
+  rt_test[((l-1)*N*J+(i+N*(j-1))),11:13]<-getDrifts(options[j,],draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l]); #drifts first choice  
+  rt_test[((l-1)*N*J+(i+N*(j-1))),14]<-(draws_id_I[i,l]+0.15*draws_id_gamma[i,l])/gamma(1+1/draws_id_alpha[i]); #this is speed if there was a value difference of 0.6/4 between options, as between T and D
+  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-((draws_id_I[i,l]+0.15*draws_id_gamma[i,l])/max(draws_id_I[i,l]-0.15*draws_id_gamma[i,l],0.00000000001))^draws_id_alpha[i]/(1+((draws_id_I[i,l]+0.15*draws_id_gamma[i,l])/max(draws_id_I[i,l]-0.15*draws_id_gamma[i,l],0.00000000001))^draws_id_alpha[i]); #this is precision if there was a value difference of 0.6/4. Note need to set =1 if second is negative
+  rt_test[((l-1)*N*J+(i+N*(j-1))),16:18]<-(getDrifts(options[j,],draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l])-draws_id_I[i,l])/draws_id_gamma[i,l]; # this is the value differences   
+  rt_test[((l-1)*N*J+(i+N*(j-1))),19]<-sd(rt_test[((l-1)*N*J+(i+N*(j-1))),18:20]); # this is bias
+  rt_test[((l-1)*N*J+(i+N*(j-1))),20]<-draws_id_stay[i,l]; # this is the stay parameter
+  rt_test[((l-1)*N*J+(i+N*(j-1))),21]<-draws_id_alpha[i]; # this is the alpha parameter
+}
+}
+}
+
+rt_test[,19]<-rowSds(as.matrix(rt_test[,16:18]))
+
+# then take averages for each individual, stored in column 3
+rt_test<-as.tibble(rt_test)
+
+rt_test_means <- rt_test %>%
+  group_by(V3) %>%
+  summarise_all(mean)  
+
+data<-cbind(rt_test_mean[rt_test_mean$treatment==1,c("speed","precision","bias_a","stay")],rt_test_means[,c(14,15,19,20)])
+
+plot(data$bias, data$V19, pch = 19, col = "lightblue")
+plot(data$speed, data$V14, pch = 19, col = "lightblue")
+plot(data$precision, data$V15, pch = 19, col = "lightblue")
+plot(data$stay, data$V20, pch = 19, col = "lightblue")
+
+
+
+
+```

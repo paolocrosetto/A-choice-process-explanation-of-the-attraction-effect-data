@@ -1,0 +1,81 @@
+# stan_version_major = 2
+# stan_version_minor = 28
+# stan_version_patch = 2
+# model = mlba_revision_v9_Frechet_generalized_model
+# method = variational
+#   variational
+#     algorithm = meanfield (Default)
+#       meanfield
+#     iter = 10000 (Default)
+#     grad_samples = 1 (Default)
+#     elbo_samples = 100 (Default)
+#     eta = 1 (Default)
+#     adapt
+#       engaged = 1 (Default)
+#       iter = 50 (Default)
+#     tol_rel_obj = 0.001
+#     eval_elbo = 100 (Default)
+#     output_samples = 2000
+# id = 1 (Default)
+# data
+#   file = /tmp/Rtmpa31gY5/standata-1de0c37569d6e.json
+# init = /tmp/Rtmpa31gY5/init-1-1de0c58c118ed.json
+# random
+#   seed = 239905686
+# output
+#   file = /home/NET1/gaudale/Rev_estimates/rev_fit_gen_barre_1-1.csv
+#   diagnostic_file = /home/NET1/gaudale/Rev_estimates/mlba_revision_v9_Frechet_generalized-diagnostic-1.csv
+#   refresh = 100 (Default)
+#   sig_figs = -1 (Default)
+#   profile_file = /home/NET1/gaudale/Rev_estimates/mlba_revision_v9_Frechet_generalized-profile-1.csv
+# num_threads = 1 (Default)
+# iter,time_in_seconds,ELBO
+100,2.446,-2281.1
+200,4.823,-1796.42
+300,7.197,-1617.69
+400,9.581,-1385.42
+500,11.979,-1356.26
+600,14.396,-1229.87
+700,16.771,-1194.27
+800,19.197,-1210.31
+900,21.613,-1136.43
+1000,24.016,-1108.39
+1100,26.401,-1092.03
+1200,28.803,-1102.05
+1300,31.198,-1076.69
+1400,33.652,-1076.7
+1500,36.083,-1076.35
+1600,38.465,-1064.07
+1700,40.855,-1060.68
+1800,43.247,-1054.54
+1900,45.641,-1055.58
+2000,48.17,-1055.26
+2100,50.628,-1055.4
+2200,53.145,-1054.19
+2300,55.64,-1048.29
+2400,58.146,-1049.49
+2500,60.531,-1047.32
+2600,62.912,-1051.11
+2700,65.308,-1046.85
+2800,67.73,-1049.8
+2900,70.15,-1047.77
+3000,72.537,-1052.47
+3100,75.033,-1043.68
+3200,77.447,-1043.88
+3300,79.873,-1052.8
+3400,82.299,-1045.44
+3500,84.739,-1045.95
+3600,87.184,-1046.76
+3700,89.64,-1044.76
+3800,92.087,-1051.85
+3900,94.53,-1048.29
+4000,96.947,-1054.31
+4100,99.378,-1042.22
+4200,101.793,-1042.47
+4300,104.24,-1044.82
+4400,106.658,-1044.94
+4500,109.108,-1042.41
+4600,111.523,-1042.86
+4700,113.95,-1042
+4800,116.387,-1041.08
+4900,118.817,-1041.12

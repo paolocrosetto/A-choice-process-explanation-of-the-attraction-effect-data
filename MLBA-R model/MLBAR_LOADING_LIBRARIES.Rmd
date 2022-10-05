@@ -1,0 +1,362 @@
+---
+output:                                       html_document
+editor_options:
+  chunk_output_type: console
+---
+
+# Cleaning and loading packages
+
+```{r cleaning and libraries}
+setwd("C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/GitHub")
+
+working_dir<-"C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/GitHub"
+#setwd("~")
+rm(list=ls())
+
+# loading rstan
+
+library(rstan)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+
+
+# loading functions in stan file for simulations
+
+expose_stan_functions("mlba_revision_v9_Frechet_generalized.stan")
+
+
+# loading cmdstanr
+
+library(cmdstanr)
+check_cmdstan_toolchain()
+cmdstan_path()
+cmdstan_version()
+
+# loading other packages for bayesian estimation
+
+library(posterior)
+library(bayesplot)
+
+# loading other necessary libraries
+
+library(dplyr)
+library(GGally)
+library(ggbeeswarm)
+library(ggplot2)
+library(ggtext)
+library(gt)
+library(Hmisc)
+library(hrbrthemes)
+color_scheme_set("brewer-Spectral")
+hrbrthemes::import_roboto_condensed()
+library(kableExtra)
+library(latexpdf)
+library(matrixStats)
+library(patchwork)
+library(Rcpp)
+library(readr)
+library(readxl)
+library(Rmisc)
+library(reshape)
+library(R.utils)
+library(stats)
+library(stringr)
+library(tibble)
+library(tictoc)
+library(tidyr)
+library(tidyverse)
+library(tikzDevice)
+
+
+```
+
+## function to do graph of choices over time
+
+```{r}
+
+share_graph<-function(rt_data,treatment){
+
+share<-rt_data
+#share<-rt_sim
+
+# split the data on first and second choice into time intervals
+
+T<-101
+choices<-matrix(data=4,nrow=length(share[,1]),ncol=T-1)
+
+for(i in 1:(T-1)){
+choices[,i]<-(share[,1]>(i/T))*0+(share[,1]<(i/T))*(share[,3]>(i/T))*share[,2]+(share[,3]<(i/T))*share[,4]
+}
+
+# split choice matrix depending on choice made
+
+no_choice<-(choices==0)
+target<-(choices==1)
+comp<-(choices==2)
+decoy<-(choices==3)
+
+
+# looking at first choices only
+
+first_choices<-matrix(data=4,nrow=length(share[,1]),ncol=T-1)
+for(i in 1:(T-1)){
+first_choices[,i]<-(share[,1]>(i/T))*0+(share[,1]<(i/T))*share[,2]
+}
+
+no_choice_f<-(first_choices==0)
+target_f<-(first_choices==1)
+comp_f<-(first_choices==2)
+decoy_f<-(first_choices==3)
+
+# computing shares of each options
+
+comp_share<-colSums(comp)/(colSums(target)+colSums(comp)+colSums(decoy))
+targ_share<-colSums(target)/(colSums(target)+colSums(comp)+colSums(decoy))
+deco_share<-colSums(decoy)/(colSums(target)+colSums(comp)+colSums(decoy))
+
+comp_share_f<-colSums(comp_f)/(colSums(target_f)+colSums(comp_f)+colSums(decoy_f))
+targ_share_f<-colSums(target_f)/(colSums(target_f)+colSums(comp_f)+colSums(decoy_f))
+deco_share_f<-colSums(decoy_f)/(colSums(target_f)+colSums(comp_f)+colSums(decoy_f))
+
+
+# computing difference competitor/target 
+diff<-targ_share-comp_share
+
+diff_f<-targ_share_f-comp_share_f
+
+# making datasets for graphs
+
+choices_mean<-as.data.frame(cbind(1:100,targ_share,comp_share,deco_share,diff,targ_share_f,comp_share_f,deco_share_f,diff_f))
+colnames(choices_mean) <- c('time', 'target','competitor','decoy','diff','target first','competitor first','decoy first',"diff first") 
+#choices_mean
+
+
+choices_panel <- melt(choices_mean, id=c("time"))
+#choices_panel
+colnames(choices_panel) <- c('time', 'chosen','mean') 
+
+choices_panel<-tibble(choices_panel)
+
+choices_panel_fin<-choices_panel %>% 
+  filter(chosen != "diff" & chosen != "diff first" & chosen !='target first' & chosen !='competitor first' & chosen !='decoy first')
+
+choices_panel_fin$level<-"final"
+
+choices_panel_first<-choices_panel %>% filter(chosen != "diff" & chosen != "diff first" & chosen !='target' & chosen !='competitor' & chosen !='decoy') %>% mutate(chosen = fct_recode(chosen, "target" = "target first", "competitor" = "competitor first", "decoy" = "decoy first")) 
+
+choices_panel_first$level<-"first"
+
+diff_fin<-choices_panel %>% 
+  filter(chosen == "diff")
+
+diff_fin$level<-"final"
+
+diff_first<-choices_panel %>% 
+  filter(chosen == "diff first") %>% 
+  mutate(chosen = fct_recode(chosen, "diff" = "diff first")) 
+
+
+
+png(file=paste("./graphs/share_choice_with_first_simul_",treatment,".png",sep=""),width=650, height=550)
+
+p1<- ggplot(data=choices_panel_fin,aes(time, mean, group = chosen, color=chosen))+
+  geom_line(size=1.5)+
+  geom_line(data = choices_panel_first, aes(time, mean, group = chosen, color=chosen), linetype="dashed", size=1)+
+  #geom_hline(aes(yintercept = 0.6), color='grey60', linetype='dashed')+
+  geom_hline(aes(yintercept = 0.5), color='grey60', linetype='dashed')+
+  geom_hline(aes(yintercept = 0.3333), color='grey60', linetype='dashed')+
+  #geom_hline(aes(yintercept = 0), color='grey60', linetype='dashed')+
+  scale_color_brewer(name = "", palette= "Set1", direction = -1)+
+  scale_linetype_manual(name = "", values = c("solid","twodash"))+
+  scale_y_continuous(labels = scales::percent, limits = c(0,0.6))+
+  scale_x_continuous(labels = scales::trans_breaks(function(x) x/5, function(x) x/1),
+                     limits = c(0,100))+
+  labs(y = "Choice Share", x = "Seconds", 
+       title = "")+
+  theme_ipsum_rc()+
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(), 
+        plot.title.position = "plot",
+        plot.background = element_rect(fill = "white", color = "white"),
+        plot.title = element_markdown(size = 14),
+        strip.text = element_text(face = "bold", size = 13))
+
+p1
+
+
+p2<-ggplot(data=diff_fin, aes(time, mean, group= chosen, color = chosen))+
+  geom_line(size=1.5)+
+  geom_line(data = diff_first, aes(time, mean, group=chosen, color=chosen), linetype="dashed", size=1)+
+  scale_linetype_manual(name = "", values = c("solid","twodash"))+
+  scale_color_manual(name = "", values = c("black","black"))+
+  scale_y_continuous(labels = scales::percent, limits = c(-0.05,0.05))+
+  scale_x_continuous(labels = scales::trans_breaks(function(x) x/5, function(x) x/1),
+                     limits = c(0,100))+
+ # geom_hline(yintercept = 0, color = "red", linetype = "dashed")+
+  labs(y = "Difference", x = "Seconds")+
+  theme_ipsum_rc()+
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(), 
+        plot.title.position = "plot",
+        plot.background = element_rect(fill = "white", color = "white"),
+        plot.title = element_markdown(size = 22),
+        strip.text = element_text(face = "bold", size = 16),
+        plot.margin = unit(c(0,0,0,0), 'cm'))
+
+p2
+
+print(p1/p2 + plot_layout(heights = c(2.2,1), guides = "collect") & 
+        theme(legend.position ="bottom", legend.margin = margin(0,0,0,0)),
+      legend.text = element_text(size = 15))
+
+dev.off()
+
+
+}
+
+```
+
+## function to do table of shares, times and transitions of choice
+
+```{r}
+
+share_table<-function(rt,treatment){
+
+# name columns
+
+colnames(rt)<-c("t1","c1","t2","c2","index","a","b","c","lp1","lq1","lp2","lq2","lp3","lq3")
+
+# label cases where there is no revision
+
+rt[rt[,"t2"]==1,"c2"]<-4 #4 is stop
+rt[rt[,"t2"]==1,"t2"]<-NA
+
+rt<-as.tibble(rt)
+
+firstclicks <- rt %>% 
+  select(t1,c1,t2,c2)
+
+## taking note of how many make no choice
+firstclicks %>% 
+  filter(is.na(c1))
+
+## taking note of how many do not revise their choice
+firstclicks %>% 
+  filter(c2 == 4)
+
+## clean out those not making a choice
+firstclicks <- firstclicks %>% 
+  filter(!is.na(c1))
+
+##table of shares
+second <- firstclicks %>% 
+  dplyr::group_by(c1, c2) %>% 
+    dplyr::tally() %>% 
+  dplyr::mutate(n/sum(n)) %>% 
+  dplyr::select(firstclick = c1, secondclick = c2, share_second = `n/sum(n)`)
+
+first <- firstclicks %>% 
+  dplyr::select(-c2) %>% 
+  dplyr::group_by(c1) %>% 
+  dplyr::tally() %>% 
+  dplyr::mutate(n/sum(n)) %>% 
+  dplyr::select(firstclick = c1, share_first = `n/sum(n)`)
+
+table_share  <- first %>% right_join(second, by = c("firstclick"))
+
+
+## table of times
+
+second <- firstclicks %>% 
+  dplyr::group_by(c1, c2) %>% 
+  dplyr::mutate(secondtime = as.numeric(t2) - as.numeric(t1)) %>% 
+  dplyr::summarise(time_second = mean(secondtime, na.rm = T)*20) %>% 
+  dplyr::select(firstclick = c1, secondclick = c2, time_second)
+
+first <- firstclicks %>% 
+  dplyr::select(-c2) %>% 
+  dplyr::group_by(c1) %>% 
+  dplyr::summarise(time_first = mean(as.numeric(t1), na.rm = T)*20) %>% 
+  dplyr::select(firstclick = c1, time_first)
+
+
+table_times <- first %>% right_join(second, by = c("firstclick"))
+
+## situation after second click
+
+# start from firstclicks, carry over chosen_1 to chosen_2 if chosen_2 == 4
+situation <- firstclicks %>% 
+  dplyr::mutate(c2 = if_else(c2 == 4, c1, c2)) %>% 
+  dplyr::select(c2) %>% 
+  dplyr::group_by(c2) %>% 
+  dplyr::tally() %>% 
+  dplyr::mutate(n/sum(n)) %>% 
+  dplyr::select(situation = c2, share_after_second = `n/sum(n)`)
+
+
+# merging shares and times
+table <- table_share %>% 
+  dplyr::left_join(table_times, by = c("firstclick", "secondclick"))
+
+# merging situation after second click
+table <- table %>% 
+  dplyr::left_join(situation, by = c("firstclick" = "situation"))
+  
+
+# replacng NaNs by "--"
+table <- table %>% 
+  dplyr::mutate(time_second = if_else(is.nan(time_second), 
+                               "--", 
+                               as.character(round(time_second,2))))
+
+# formatting
+table <- table %>% 
+  dplyr::mutate(share_first = round(100*share_first,0),
+         share_second = round(100*share_second,0),
+         share_after_second = round(100*share_after_second, 0)) %>% 
+  dplyr::mutate(time_first = paste0("(", round(time_first, 2), ")"),
+         time_second = paste0("(", time_second, ")")) %>% 
+  dplyr::select(firstclick, share_first, time_first, 
+                 secondclick, share_second, time_second, share_after_second)
+
+## further formatting
+table <- table %>% 
+  dplyr::mutate(firstclick = as_factor(firstclick), 
+         firstclick = fct_relevel(firstclick, "1", "2"),
+         secondclick = as_factor(secondclick),
+         secondclick = fct_relevel(secondclick, "1", "2")) %>% 
+  dplyr::arrange(firstclick, secondclick)
+
+# final formatting: removing duplicated rows
+table <- table %>% 
+  rownames_to_column() %>% 
+  dplyr::mutate(firstclick = as.character(firstclick)) %>% 
+  dplyr::mutate(rowname = as.integer(rowname),
+         rowname = if_else(rowname %% 3 == 0 | (rowname + 1) %% 3 == 0, 0, 1 )) %>% 
+  dplyr::mutate(share_first = if_else(rowname == 0, "", as.character(share_first) ),
+         time_first = if_else(rowname == 0, "", as.character(time_first)),
+         firstclick = if_else(rowname == 0, "", firstclick),
+         share_after_second = if_else(rowname == 0, "", as.character(share_after_second))) %>% 
+  dplyr::select(-rowname)
+
+# adding a column to make the final share more meaningful
+table <- table %>% 
+  dplyr::mutate(final = firstclick) %>% 
+  dplyr::select(firstclick, share_first, time_first, 
+         secondclick, share_second, time_second, 
+         final, share_after_second)
+
+
+table %>% 
+  ungroup() %>% 
+  # rename(" " = firstclick, "% share (time)" = first,
+  #        " " = secondclick, "% share (time)" = second) %>% 
+  kable("latex", booktabs = T, col.names = NULL) %>% 
+  add_header_above(c("share %", "time", "", "share %", "time", "", "share %")) %>% 
+  add_header_above(c("First choice" = 3, "Revision" = 3, "After revision" = 2)) %>% 
+
+save_kable(paste("./tables/table_clicks_shares_",effect,".tex", sep=""))
+
+}
+
+```

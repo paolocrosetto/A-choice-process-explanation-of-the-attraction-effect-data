@@ -1,0 +1,46 @@
+# stan_version_major = 2
+# stan_version_minor = 28
+# stan_version_patch = 2
+# model = mlba_revision_v9_Frechet_generalized_mixed_model
+# method = variational
+#   variational
+#     algorithm = meanfield (Default)
+#       meanfield
+#     iter = 10000 (Default)
+#     grad_samples = 1 (Default)
+#     elbo_samples = 100 (Default)
+#     eta = 1 (Default)
+#     adapt
+#       engaged = 1 (Default)
+#       iter = 50 (Default)
+#     tol_rel_obj = 0.001
+#     eval_elbo = 100 (Default)
+#     output_samples = 2000
+# id = 1 (Default)
+# data
+#   file = /tmp/Rtmpy9iOsm/standata-232abe031fb6.json
+# init = /tmp/Rtmpy9iOsm/init-1-232ab101ed906.json
+# random
+#   seed = 1400792639
+# output
+#   file = /home/NET1/gaudale/Mixed_estimates/rev_mix_fit_gen_barre_2-1.csv
+#   diagnostic_file = /home/NET1/gaudale/Mixed_estimates/mlba_revision_v9_Frechet_generalized_mixed-diagnostic-1.csv
+#   refresh = 100 (Default)
+#   sig_figs = -1 (Default)
+#   profile_file = /home/NET1/gaudale/Mixed_estimates/mlba_revision_v9_Frechet_generalized_mixed-profile-1.csv
+# num_threads = 1 (Default)
+# iter,time_in_seconds,ELBO
+100,2.636,-2504.38
+200,5.18,-1748.27
+300,7.778,-1448.05
+400,10.342,-1277.1
+500,12.832,-1157.55
+600,15.263,-1085.21
+700,17.824,-1032.63
+800,20.351,-986.708
+900,22.918,-979.277
+1000,25.451,-938.899
+1100,27.997,-924.075
+1200,30.447,-903.29
+1300,32.962,-882.88
+1400,35.519,-880.557
