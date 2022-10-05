@@ -50,7 +50,7 @@ Tables are saved to the `Tables/` folder. They contain the exact same informatio
 
 # MLBA-R model
 
-This repository presents an extension of the multiattribute linear ballistic accumulator model to allow for choice revisions.
+In the `MLBA-R` section of the repository, you find an extension of the multiattribute linear ballistic accumulator model to allow for choice revisions.
 
 We provide `RStan` code for the model, and commands for the simulations, estimations and post-estimation on two experiments.
 
@@ -99,7 +99,7 @@ Figures are saved to the `graphs/` folder.
 
 ### Tables
 
-Tables are saved to the `tables/` folder. They contain the exact same information as in the paper.
+Tables are saved to the `tables/` folder.
 
 # License
 
