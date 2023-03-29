@@ -7,10 +7,7 @@ editor_options:
 # Cleaning and loading packages
 
 ```{r cleaning and libraries}
-setwd("C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/GitHub")
-
-working_dir<-"C:/Users/alescia/Dropbox/Research/CS3/05-Analysis/LMBAR/GitHub"
-#setwd("~")
+setwd("./MLBA-R model")
 rm(list=ls())
 
 # loading rstan
@@ -24,10 +21,18 @@ rstan_options(auto_write = TRUE)
 
 expose_stan_functions("mlba_revision_v9_Frechet_generalized.stan")
 
+# installing cmdstanr if not done already
+
+#install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
 
 # loading cmdstanr
 
 library(cmdstanr)
+
+# make sure to install mingw32-make and g++ if not done already
+
+#check_cmdstan_toolchain(fix = TRUE)
+
 check_cmdstan_toolchain()
 cmdstan_path()
 cmdstan_version()
@@ -46,10 +51,11 @@ library(ggplot2)
 library(ggtext)
 library(gt)
 library(Hmisc)
-library(hrbrthemes)
-color_scheme_set("brewer-Spectral")
-hrbrthemes::import_roboto_condensed()
+#library(hrbrthemes)
+#color_scheme_set("brewer-Spectral")
+#hrbrthemes::import_roboto_condensed()
 library(kableExtra)
+options(knitr.table.format = "html") 
 library(latexpdf)
 library(matrixStats)
 library(patchwork)
@@ -173,7 +179,7 @@ p1<- ggplot(data=choices_panel_fin,aes(time, mean, group = chosen, color=chosen)
                      limits = c(0,100))+
   labs(y = "Choice Share", x = "Seconds", 
        title = "")+
-  theme_ipsum_rc()+
+  theme_minimal()+
   theme(legend.position = "bottom",
         panel.grid.minor = element_blank(), 
         plot.title.position = "plot",
@@ -189,12 +195,12 @@ p2<-ggplot(data=diff_fin, aes(time, mean, group= chosen, color = chosen))+
   geom_line(data = diff_first, aes(time, mean, group=chosen, color=chosen), linetype="dashed", size=1)+
   scale_linetype_manual(name = "", values = c("solid","twodash"))+
   scale_color_manual(name = "", values = c("black","black"))+
-  scale_y_continuous(labels = scales::percent, limits = c(-0.05,0.05))+
+  scale_y_continuous(labels = scales::percent, limits = c(-0.05,0.15))+
   scale_x_continuous(labels = scales::trans_breaks(function(x) x/5, function(x) x/1),
                      limits = c(0,100))+
  # geom_hline(yintercept = 0, color = "red", linetype = "dashed")+
   labs(y = "Difference", x = "Seconds")+
-  theme_ipsum_rc()+
+  theme_minimal()+
   theme(legend.position = "bottom",
         panel.grid.minor = element_blank(), 
         plot.title.position = "plot",
@@ -262,7 +268,7 @@ first <- firstclicks %>%
   dplyr::mutate(n/sum(n)) %>% 
   dplyr::select(firstclick = c1, share_first = `n/sum(n)`)
 
-table_share  <- first %>% right_join(second, by = c("firstclick"))
+table_share  <- first %>% right_join(second, by = c("firstclick"), multiple = "all")
 
 
 ## table of times
@@ -280,7 +286,7 @@ first <- firstclicks %>%
   dplyr::select(firstclick = c1, time_first)
 
 
-table_times <- first %>% right_join(second, by = c("firstclick"))
+table_times <- first %>% right_join(second, by = c("firstclick"), multiple = "all")
 
 ## situation after second click
 
@@ -351,11 +357,10 @@ table %>%
   ungroup() %>% 
   # rename(" " = firstclick, "% share (time)" = first,
   #        " " = secondclick, "% share (time)" = second) %>% 
-  kable("latex", booktabs = T, col.names = NULL) %>% 
-  add_header_above(c("share %", "time", "", "share %", "time", "", "share %")) %>% 
-  add_header_above(c("First choice" = 3, "Revision" = 3, "After revision" = 2)) %>% 
-
-save_kable(paste("./tables/table_clicks_shares_",effect,".tex", sep=""))
+  kable("latex", booktabs = T, col.names = NULL, valign = "top") %>% 
+  add_header_above(c("choice", "share %", "time", "choice", "share %", "time", "choice", "share %")) %>% 
+  add_header_above(c("First choice" = 3, "Revision" = 3, "After revision" = 2)) %>%
+  save_kable(paste("./tables/table_clicks_shares_",effect,".tex", sep=""))
 
 }
 

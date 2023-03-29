@@ -12,10 +12,13 @@ draws_rev_mix_fit_barre   <- read_csv("./results/draws__rev_mix__fit_gen_barre.c
 draws_rev_mix_fit_chiffre <- read_csv("./results/draws__rev_mix__fit_gen_chiffre.csv")
 draws_rev_mix_fit_exp2    <- read_csv("./results/draws__rev_mix__fit_gen_exp2.csv")
 
-# for experiment 1
+# here we run the code only for the graphical treatment of experiment 1 and the attraction effect
+
+# experiment 1
   options <- read_csv("data/menus_cs_exp1.csv")
   options<-matrix(unlist(options), ncol=6,)
   J<-length(options[,1]) #(nr of menus)
+  
   effect<-"attr"
 
     # graphical treatment
@@ -26,41 +29,41 @@ draws_rev_mix_fit_exp2    <- read_csv("./results/draws__rev_mix__fit_gen_exp2.cs
     draws <- draws_rev_mix_fit_barre[selected,c(4:8,14,16)] 
   
     # numeric treatment
-    treatment<-"exp1_chiffre"
-    ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
-    N<-round(1000000/J,0) # number of draws to take up
-    selected<-sample(ndraws, N, replace=TRUE)
-    draws <- draws_rev_mix_fit_chiffre[selected,c(4:8,14,16)]
+    # treatment<-"exp1_chiffre"
+    # ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
+    # N<-round(1000000/J,0) # number of draws to take up
+    # selected<-sample(ndraws, N, replace=TRUE)
+    # draws <- draws_rev_mix_fit_chiffre[selected,c(4:8,14,16)]
 
 # for experiment 2
 
-  treatment<-"exp2"
-  
-  options <- read_csv("./data/menus_cs_exp2.csv")
-  options_a<-options[1:12,]
-  options_s<-options[13:24,]
-  options_c<-options[25:36,]
-  
-  # then choose what effect to look at
-  effect<-"attr"
-  options<-options_a
-  # or
-  effect<-"sim"
-  options<-options_s
-  # or
-  effect<-"comp"
-  options<-options_c
-  
-  #then
-  
-  options<-matrix(unlist(options), ncol=6,)
-  J<-length(options[,1]) #(nr of menus)
-
-  # if keep all draws, too big matrix, so we select a sample of rows in draws
-  ndraws<-length(draws_rev_mix_fit_exp2$alpha)
-  N<-round(1000000/J,0) # number of draws to take up
-  selected<-sample(ndraws, N, replace=TRUE)
-  draws <- draws_rev_mix_fit_exp2[selected,c(4:8,14,16)] 
+  # treatment<-"exp2"
+  # 
+  # options <- read_csv("./data/menus_cs_exp2.csv")
+  # options_a<-options[1:12,]
+  # options_s<-options[13:24,]
+  # options_c<-options[25:36,]
+  # 
+  # # then choose what effect to look at
+  # effect<-"attr"
+  # options<-options_a
+  # # or
+  # effect<-"sim"
+  # options<-options_s
+  # # or
+  # effect<-"comp"
+  # options<-options_c
+  # 
+  # #then
+  # 
+  # options<-matrix(unlist(options), ncol=6,)
+  # J<-length(options[,1]) #(nr of menus)
+  # 
+  # # if keep all draws, too big matrix, so we select a sample of rows in draws
+  # ndraws<-length(draws_rev_mix_fit_exp2$alpha)
+  # N<-round(1000000/J,0) # number of draws to take up
+  # selected<-sample(ndraws, N, replace=TRUE)
+  # draws <- draws_rev_mix_fit_exp2[selected,c(4:8,14,16)] 
 
 ```
 
@@ -95,20 +98,23 @@ write.csv(rt_test,file=paste("./results/post_estimates_",treatment,"_",effect,".
 
 ```{r}
 
-# choose among:
+# we run this only for the attraction effect in experiment 1, graphical treatment, for illustration
 
 effect<-"attr"
-effect<-"sim"
-effect<-"comp"
+#effect<-"sim"
+#effect<-"comp"
+
+# and
+
 treatment<-"exp1_barre"
-treatment<-"exp1_chiffre"
-treatment<-"exp2"
+#treatment<-"exp1_chiffre"
+#treatment<-"exp2"
 
 rt_test<-read.csv(paste("./results/post_estimates_",treatment,"_",effect,".csv",sep=""))
 
 #then
 
-# get rid of no choices
+# consider when no choices is made in the imparted time
 length(rt_test[rt_test[,1]<1,])
 length(rt_test)
 #rt_test<-rt_test[rt_test[,1]<1,]
@@ -131,12 +137,8 @@ table_ex_xtabs2/(J*N)
 
 # choice shares over time
 # do graphs using # share choice function in "model and simulation"
-memory.limit() 
-memory.limit(40000)
 share_graph(rt_test,paste(treatment,"_",effect,sep=""))
 
-# still need to do transition tables
-# for this go to step 1 and choose to save tables in Postestimated_graphs
 
 ```
 
@@ -145,17 +147,19 @@ share_graph(rt_test,paste(treatment,"_",effect,sep=""))
 
 ```{r}
 
-draws_rev_mix_fit_barre   <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_barre.csv")
-draws_rev_mix_fit_chiffre <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_chiffre.csv")
-draws_rev_mix_fit_exp2    <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_exp2.csv")
+draws_rev_mix_fit_barre   <- read_csv("./results/draws__rev_mix__fit_gen_barre.csv")
+draws_rev_mix_fit_chiffre <- read_csv("./results/draws__rev_mix__fit_gen_chiffre.csv")
+draws_rev_mix_fit_exp2    <- read_csv("./results/draws__rev_mix__fit_gen_exp2.csv")
 
-# for experiment 1
-options <- read_csv("menus_cs_exp1.csv")
+# we run this only for menus in experiment 1, graphical treatment, for illustration
+
+options <- read_csv("./data/menus_cs_exp1.csv")
 options<-matrix(unlist(options), ncol=6,)
 J<-length(options[,1]) #(nr of menus)
 effect<-"attraction"
 
-# if barre
+# for graphical treatment
+
 treatment<-"exp1_barre"
 indiv<-63
 draws<-draws_rev_mix_fit_barre[,c(4:8,14,16)]
@@ -164,47 +168,45 @@ N<-round(1000000/indiv/J,0) # number of draws to take up
 selected<-sample(ndraws, N)
 draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
 
-# if chiffre
-treatment<-"exp1_chiffre"
-indiv<-48
-draws<-draws_rev_mix_fit_chiffre[,c(4:8,14,16)]
-ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
+# for numeric treatment
+
+# treatment<-"exp1_chiffre"
+# indiv<-48
+# draws<-draws_rev_mix_fit_chiffre[,c(4:8,14,16)]
+# ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
+# N<-round(1000000/indiv/J,0) # number of draws to take up
+# selected<-sample(ndraws, N)
+# draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
 
 # for experiment 2
 
-treatment<-"exp2"
-
-options <- read_csv("menus_cs_exp2.csv")
-options_a<-options[1:12,]
-options_s<-options[13:24,]
-options_c<-options[25:36,]
-
-# then either
-effect<-"attraction"
-options<-options_a
-# or
-effect<-"similarity"
-options<-options_s
-# or
-effect<-"compromise"
-options<-options_c
-
-
-options<-matrix(unlist(options), ncol=6,)
-J<-length(options[,1]) #(nr of menus)
-
-indiv<-198
-draws<-draws_rev_mix_fit_exp2[,c(4:8,14,16)]
-ndraws<-length(draws_rev_mix_fit_exp2$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
-
-
-
+# treatment<-"exp2"
+# 
+# options <- read_csv("./data/menus_cs_exp2.csv")
+# options_a<-options[1:12,]
+# options_s<-options[13:24,]
+# options_c<-options[25:36,]
+# 
+# # then either
+# effect<-"attraction"
+# options<-options_a
+# # or
+# effect<-"similarity"
+# options<-options_s
+# # or
+# effect<-"compromise"
+# options<-options_c
+# 
+# 
+# options<-matrix(unlist(options), ncol=6,)
+# J<-length(options[,1]) #(nr of menus)
+# 
+# indiv<-198
+# draws<-draws_rev_mix_fit_exp2[,c(4:8,14,16)]
+# ndraws<-length(draws_rev_mix_fit_exp2$alpha)
+# N<-round(1000000/indiv/J,0) # number of draws to take up
+# selected<-sample(ndraws, N)
+# draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
 
 
 
@@ -218,15 +220,11 @@ draws_id_gamma <- as.matrix(draws_id[,c((2+3*indiv):(1+4*indiv))])
 draws_id_beta <- as.matrix(draws_id[,c((2+4*indiv):(1+5*indiv))])
 draws_id_stay <- as.matrix(draws_id[,c((2+5*indiv):(1+6*indiv))])
 
-View(draws_id_I)
-
 
 # what parameters
 k<-1
 tau_sim<-0.01 # to introduce random choices at beginning
 # if keep all draws, too big matrix
-
-
 
 
 rt_test<-matrix(data=NA,nrow=J*N*indiv,ncol=15)
@@ -244,10 +242,10 @@ for (i in (1:N)){
 
 # save rttest depending on situation as
 rt_test_exp1_barre_attr<-rt_test
-rt_test_exp1_chiffre_attr<-rt_test
-rt_test_exp2_attr<-rt_test
-rt_test_exp2_sim<-rt_test
-rt_test_exp2_comp<-rt_test
+#rt_test_exp1_chiffre_attr<-rt_test
+#rt_test_exp2_attr<-rt_test
+#rt_test_exp2_sim<-rt_test
+#rt_test_exp2_comp<-rt_test
 
 #summary(rt_test)
 #View(rt_test)
@@ -276,8 +274,6 @@ table_ex_xtabs2/(J*N*indiv)
 
 # choice shares over time
 # do graphs using # share choice function in "data and regression"
-memory.limit() 
-memory.limit(40000)
 share_graph(rt_test,paste(treatment,"_",effect,sep=""))
 
 # still need to do transition tables
@@ -285,29 +281,28 @@ share_graph(rt_test,paste(treatment,"_",effect,sep=""))
 
 ```
 
-## alternative way to compute speed, precision and bias using draws of individual parameters of mixed models and example options
+## alternative way to compute speed, precision and bias using draws of individual parameters of mixed models and with example options
 
 ```{r}
 
-draws_rev_mix_fit_barre   <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_barre.csv")
-draws_rev_mix_fit_chiffre <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_chiffre.csv")
-draws_rev_mix_fit_exp2    <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_exp2.csv")
+draws_rev_mix_fit_barre   <- read_csv("./results/draws__rev_mix__fit_gen_barre.csv")
+draws_rev_mix_fit_chiffre <- read_csv("./results/draws__rev_mix__fit_gen_chiffre.csv")
+draws_rev_mix_fit_exp2    <- read_csv("./results/draws__rev_mix__fit_gen_exp2.csv")
 
-# choose what options to do among the three
-
+# choose what options to do among the three, here we will do only attraction for illustration purposes
 
 effect<-"attraction"
 options<-options_a
 
+# alternatively
+
+#effect<-"similarity"
+#options<-options_s
+
 #or
 
-effect<-"similarity"
-options<-options_s
-
-#or
-
-effect<-"compromise"
-options<-options_c
+#effect<-"compromise"
+#options<-options_c
 
 
 #then
@@ -315,6 +310,8 @@ options<-options_c
 options<-matrix(unlist(options), ncol=6,)
 J<-length(options[,1]) #(nr of menus)
 
+
+# choose what experiment we look at, here we do only the graphical treatment in experiment 1
 # if barre
 treatment<-"exp1_barre"
 indiv<-63
@@ -324,26 +321,21 @@ selected<-sample(ndraws, N)
 draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
 
 # if chiffre
-treatment<-"exp1_chiffre"
-indiv<-48
-ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
+# treatment<-"exp1_chiffre"
+# indiv<-48
+# ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
+# N<-round(1000000/indiv/J,0) # number of draws to take up
+# selected<-sample(ndraws, N)
+# draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
 
 # for experiment 2
 
-treatment<-"exp2"
-indiv<-198
-ndraws<-length(draws_rev_mix_fit_exp2$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
-
-
-
-
-
+# treatment<-"exp2"
+# indiv<-198
+# ndraws<-length(draws_rev_mix_fit_exp2$alpha)
+# N<-round(1000000/indiv/J,0) # number of draws to take up
+# selected<-sample(ndraws, N)
+# draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
 
 # then extract parameters
 

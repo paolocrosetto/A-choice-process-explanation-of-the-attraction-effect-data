@@ -60,6 +60,8 @@ To run the simulations and model estimation you need `R` and the following packa
 
 -   `rstan` and `cmdstanr` -- for Bayesian modeling and inference.
 
+-   `cmdstanr`must be installed from https://github.com/stan-dev/cmdstanr as explained at     https://mc-stan.org/r-packages/
+
 -   `posterior` and `bayesplot` -- for posterior analysis and plotting results
 
 -   other necessary libraries are loaded in the file `MLBAR_LOADING_LIBRARIES.Rmd`
@@ -68,7 +70,7 @@ To run the simulations and model estimation you need `R` and the following packa
 
 -   Download or clone this repository.
 -   Open the `.Rproj` file.
--   Open and run the following files:
+-   Open and run the following files in the following succession:
     -   `MLBAR_LOADING_LIBRARIES.Rmd` : loads necessary packages and functions to do graphs and tables
     -   `MLBAR_SIMULATIONS.Rmd` : to perform simulations of choices for the attraction, similarity and compromise effects
     -   `MLBAR_ESTIMATION.Rmd` : to perform estimates of the parameters of the MLBAR model and outputs resulting estimates

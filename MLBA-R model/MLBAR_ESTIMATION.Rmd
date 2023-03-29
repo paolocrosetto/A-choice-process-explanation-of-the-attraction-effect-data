@@ -8,7 +8,7 @@ editor_options:
 
 ## loading and storing data from experiment 1
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 
 First_two_choices <- read.csv2("./data/First_five_choices_exp1.csv", sep=",")
 
@@ -72,20 +72,20 @@ rt<-read.csv("./data/rt_exp_1.csv")
 
 # selecting menus with a CS and three options
 
-rts_exp1<-rt[rt$type==1,1:15]
+rts_exp1<-rt[rt$type==1,1:17]
 
 # separating graphical (bar) and numeric (chifr) treatment in experiment 1
 
-rts_bar<-rts_exp1[rts$treatment==0,1:15]
+rts_bar<-rts_exp1[rts_exp1$treatment==0,1:15]
 
-rts_chifr<-rts_exp1[rts$treatment==1,1:15]
+rts_chifr<-rts_exp1[rts_exp1$treatment==1,1:15]
 
 
 ```
 
 ## loading and storing data from experiment 2
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 # experiment 2
 
 First_two_choices <- read.csv2("./data/First_two_choices_exp2.csv", sep=",")
@@ -190,25 +190,28 @@ mod_rev_mix2 <- cmdstan_model('mlba_revision_v9_Frechet_generalized_mixed.stan')
 
 ```{r}
 # choose what dataset to run the model on
-
+# here, we run the code for 
 # experiment 1, graphical treatment
+# the code for other sub-experiments is commented out
 
 treatment<-"barre"; rts<-rts_bar;
+N_bar=max(as.integer((factor(rts[,15], levels=unique(rts[,15])))))
+
 
 # experiment 1, numeric treatment
-
 treatment<-"chiffre"; rts<-rts_chifr;
+N_chiffre=max(as.integer((factor(rts[,15], levels=unique(rts[,15])))))
 
 # experiment 2
-
 treatment<-"exp2"; rts<-rts_exp2;
+N_exp2=max(as.integer((factor(rts[,15], levels=unique(rts[,15])))))
 ```
 
 ## setting parameters for estimates including starting values
 
 ```{r}
 
-
+working_dir<-"./"
 
 ndraws<-2000 # we draw 2000 samples post estimation
 nchains<-1 # we do 16 chains for full estimations, we set nchains=1 here for demonstration purpose
@@ -233,9 +236,9 @@ beta2<-rep(beta,NUM_INDIV)
 stay2<-rep(stay,NUM_INDIV)
 ```
 
-## regressions for first choices only
+## regressions for first choices only (this can take quite a while!)
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 for (i in (1:nchains)){
 
 fit <- mod$variational(
@@ -257,9 +260,9 @@ fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_fit_late
 }
 ```
 
-## regressions including revisions in choices
+## regressions including revisions in choices (this can take quite a while!)
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 for (i in (1:nchains)){
 
 fit <- mod_rev2$variational(
@@ -280,9 +283,9 @@ fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_rev_fit_
 }
 ```
 
-## Regressions with revisions in choice and mixed effects
+## Regressions with revisions in choice and mixed effects (this can take quite a while!)
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 for (i in (1:nchains)){
 fit <- mod_rev_mix2$variational(
@@ -318,22 +321,20 @@ fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_rev_mix_
 nchains<-1 # full results rely on 16 chains
 ndraws<-2000
 
-# choose what treatment to look at
-
-# experiment 1, graphical treatment
+# choose what treatment to look at, here we limit ourselves to experiment 1, graphical treatment for demonstration purpose
 
 treatment<-"barre";
 
 # experiment 1, numeric treatment
 
-treatment<-"chiffre";
+#treatment<-"chiffre";
 
 # experiment 2
 
-treatment<-"exp2";
+#treatment<-"exp2";
 
 
-# then look at type of estimate
+# then look at type of estimate, here we limit ourselves to single estimates for demonstration purpose
 
 # single estimates
 
@@ -342,12 +343,12 @@ type<-"_"
 
 # for rev estimates
 
-type<-"_rev_"
+#type<-"_rev_"
 
 
 # for mixed estimates
 
-type<-"_rev_mix_"
+#type<-"_rev_mix_"
 
 
 
@@ -386,29 +387,30 @@ write.csv(summarise_draws(fit),file=paste("./results/summary_",type,"_fit_gen_",
 
 summarise_draws(fit)
 # checking the draws chain by chain, and identifying if some are different from others
+# note, for this we need several chains, so we do not run mcmc_violin it in this file which is for demonstration purposes
 
 mcmc_trace(fit,pars=c("lp__"))
-mcmc_violin(fit,pars=c("lp__"))
+#mcmc_violin(fit,pars=c("lp__"))
 
 # for single estimates
 
 mcmc_hist(fit,pars=c("I","gamma","m","lam","beta","alpha"))
 mcmc_trace(fit[,],pars=c("I","gamma","m","lam","beta","alpha"))
-mcmc_violin(fit,pars=c("I","gamma","m","lam","beta","alpha"))
+#mcmc_violin(fit,pars=c("I","gamma","m","lam","beta","alpha"))
 
 
 # for rev estimates
 
-mcmc_hist(fit,pars=c("I","gamma","m","lam","beta","alpha","stay"))
-mcmc_trace(fit[,],pars=c("I","gamma","m","lam","beta","alpha","stay"))
-mcmc_violin(fit,pars=c("I","gamma","m","lam","beta","alpha","stay"))
+#mcmc_hist(fit,pars=c("I","gamma","m","lam","beta","alpha","stay"))
+#mcmc_trace(fit[,],pars=c("I","gamma","m","lam","beta","alpha","stay"))
+#mcmc_violin(fit,pars=c("I","gamma","m","lam","beta","alpha","stay"))
 
 # for mixed estimates
 
-mcmc_hist(fit,pars=c("mu_I","mu_gamma","mu_m","mu_lam","mu_beta","alpha","mu_stay"))
-mcmc_trace(fit[,],pars=c("mu_I","mu_gamma","mu_m","mu_lam","mu_beta","alpha","mu_stay"))
-mcmc_violin(fit,pars=c("mu_I","mu_gamma","mu_m","mu_lam"))
-mcmc_violin(fit,pars=c("mu_beta","alpha","mu_stay"))
+#mcmc_hist(fit,pars=c("mu_I","mu_gamma","mu_m","mu_lam","mu_beta","alpha","mu_stay"))
+#mcmc_trace(fit[,],pars=c("mu_I","mu_gamma","mu_m","mu_lam","mu_beta","alpha","mu_stay"))
+#mcmc_violin(fit,pars=c("mu_I","mu_gamma","mu_m","mu_lam"))
+#mcmc_violin(fit,pars=c("mu_beta","alpha","mu_stay"))
 
 
 # saving post estimates and summary table of estimates
@@ -744,22 +746,6 @@ options_s<-rbind(c(6, 4, 4, 6, 3.8, 6.2), c(4, 6, 6, 4, 6.2, 3.8))/scaling
 options_c<-rbind(c(6, 4, 4, 6, 8, 2), c(4, 6, 6, 4, 2, 8))/scaling
 ```
 
-# choose what options to do among the three
-
-```{r}
-effect<-"attraction"
-options<-options_a
-
-#or
-
-effect<-"similarity"
-options<-options_s
-
-#or
-
-effect<-"compromise"
-options<-options_c
-```
 
 ## compute summary indicators for each effect
 
@@ -767,9 +753,26 @@ options<-options_c
 individual_parameter_estimates<-read.csv("./results/individual_parameter_estimates.csv")
 
 
-J<-length(options[,1]) #(nr of menus)
-
 fit_formatted<-individual_parameter_estimates
+
+
+for (i in 1:3){
+
+  if (i==1) {
+  effect<-"attraction"
+  options<-options_a
+  J<-length(options[,1]) #(nr of menus)
+} else if (i==2) {
+    effect<-"similarity"
+    options<-options_s
+    J<-length(options[,1]) #(nr of menus)
+} else {
+      effect<-"compromise"
+      options<-options_c
+      J<-length(options[,1]) #(nr of menus)
+}
+
+
 
 
 
@@ -804,7 +807,9 @@ if (effect=="attraction") {
     rt_test_s<-rt_test
 } else {
       rt_test_c<-rt_test
-      }
+}
+
+}
 ```
 
 
@@ -994,590 +999,3 @@ write.csv(tab,file="./results/individual_indicator_estimates_stats.csv", row.nam
 
 ```
 
-## clustering individuals to define types
-
-```{r tidy=TRUE}
-library(readr)
-individual_indicator_estimates <- read_csv("./results/individual_indicator_estimates.csv")
-individual_indicator_estimates <- individual_indicator_estimates[,-1]
-individual_indicator<-as.matrix(individual_indicator_estimates[,c("speed","precision","stay","bias_a")])
-library(stats)
-library(cluster)
-data<-daisy(individual_indicator,metric="euclidean",stand=TRUE)
-
-mydata <- data
-wss<-c(1:15)
-  for (i in 1:15) wss[i] <- sum(kmeans(mydata,
-                                       centers=i)$withinss)
-plot(1:15, wss, type="b", xlab="Number of Clusters",
-     ylab="Within groups sum of squares")
-
-
-library(fpc)
-pamk.best <- pamk(mydata)
-cat("number of clusters estimated by optimum average silhouette width:", pamk.best$nc, "\n")
-plot(pam(mydata, pamk.best$nc))
-Oasw<-pamk.best$pamobject$clustering
-
-asw <- numeric(20)
-for (k in 2:20)
-  asw[[k]] <- pam(mydata, k) $ silinfo $ avg.width
-k.best <- which.max(asw)
-cat("silhouette-optimal number of clusters:", k.best, "\n")
-sonc<-pam(mydata, k.best)$clustering
-
-require(vegan)
-fit <- cascadeKM(scale(mydata, center = TRUE,  scale = TRUE), 1, 10, iter = 1000)
-plot(fit, sortg = TRUE, grpmts.plot = TRUE)
-calinski.best <- as.numeric(which.max(fit$results[2,]))
-cat("Calinski criterion optimal number of clusters:", calinski.best, "\n")
-
-fourclusterC<-fit$partition[,calinski.best]
-twoclusterC<-fit$partition[,2]
-
-library(mclust)
-# Run the function to see how many clusters
-# it finds to be optimal, set it to search for
-# at least 1 model and up 20.
-d_clust <- Mclust(as.matrix(mydata), G=1:20)
-m.best <- dim(d_clust$z)[2]
-cat("model-based optimal number of clusters:", m.best, "\n")
-# 4 clusters
-plot(d_clust)
-```
-
-
-```{r tidy=TRUE}
-d_dist <- dist(as.matrix(mydata))   # find distance matrix 
-plot(hclust(d_dist))           # apply hierarchical clustering and plot
-
-
-data.kmeans<-kmeans(data,centers=2)
-twocluster<-data.kmeans$cluster
-data.kmeans<-kmeans(data,centers=4)
-fourcluster<-data.kmeans$cluster
-
-individual_indicator_estimates<-cbind(individual_indicator_estimates,twocluster,fourcluster)
-
-# correlation across different groupings and treatments
-
-individual_indicator_estimates %>% 
-  select(treatment, twocluster,fourcluster) -> dataggpairs
-
-  
-plot(jitter(individual_indicator_estimates$twocluster),jitter(individual_indicator_estimates$fourcluster))
-
-
-twocluster <- individual_indicator_estimates %>% drop_na() %>% 
-  dplyr::group_by(twocluster,treatment)%>%
-  dplyr::summarize(treatment = mean(treatment),
-            speed = mean(speed),
-            precision = mean(precision),
-            bias = mean(bias_a),
-            stay = mean(stay),
-            N = length(stay))
-
-twoclusteroverall <- individual_indicator_estimates %>% drop_na() %>% 
-  dplyr::group_by(twocluster)%>%
-  dplyr::summarize(speed = mean(speed),
-            precision = mean(precision),
-            bias = mean(bias_a),
-            stay = mean(stay),
-            N = length(stay))
-
-
-fourcluster <- individual_indicator_estimates %>% drop_na() %>% 
-  dplyr::group_by(fourcluster,treatment)%>%
-  dplyr::summarize(treatment = mean(treatment),
-            speed = mean(speed),
-            precision = mean(precision),
-            bias = mean(bias_a),
-            stay = mean(stay),
-            N = length(stay))
-
-fourclusteroverall <- individual_indicator_estimates %>% drop_na() %>% 
-  dplyr::group_by(fourcluster)%>%
-  dplyr::summarize(speed = mean(speed),
-            precision = mean(precision),
-            bias = mean(bias_a),
-            stay = mean(stay),
-            N = length(stay))
-
-
-
-cols <- c("#CFD8DC", "#90A4AE", "#455A64")
-
-# graphing results of two cluster estimates to identify significant differences
-
-individual_indicator_estimates$twocluster<-as.factor(individual_indicator_estimates$twocluster)
-
-ggplot(individual_indicator_estimates, aes(x = twocluster, y = speed, fill = twocluster)) + 
-  stat_boxplot(geom = "errorbar",
-               width = 0.25) + 
-  geom_boxplot(alpha = 0.8,          # Fill transparency
-               colour = "#474747",   # Border color
-               outlier.colour = 1)  # Outlier color
-  
-ggplot(individual_indicator_estimates, aes(x = twocluster, y = precision, fill = twocluster)) + 
-  stat_boxplot(geom = "errorbar",
-               width = 0.25) + 
-  geom_boxplot(alpha = 0.8,          # Fill transparency
-               colour = "#474747",   # Border color
-               outlier.colour = 1)  # Outlier color
-
-ggplot(individual_indicator_estimates, aes(x = twocluster, y = bias_a, fill = twocluster)) + 
-  stat_boxplot(geom = "errorbar",
-               width = 0.25) + 
-  geom_boxplot(alpha = 0.8,          # Fill transparency
-               colour = "#474747",   # Border color
-               outlier.colour = 1)  # Outlier color
-
-ggplot(individual_indicator_estimates, aes(x = twocluster, y = stay, fill = twocluster)) + 
-  stat_boxplot(geom = "errorbar",
-               width = 0.25) + 
-  geom_boxplot(alpha = 0.8,          # Fill transparency
-               colour = "#474747",   # Border color
-               outlier.colour = 1)  # Outl
-  
-
-write.csv(twocluster,file="./tables/twocluster.csv", row.names = FALSE)
-write.csv(fourcluster,file="./tables/fourcluster.csv", row.names = FALSE)
-
-
-library(kableExtra)
-x=kable(twocluster, format = "latex", caption = "Indicator estimates, by type and treatment, two clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_two_cluster.tex")
-x=kable(fourcluster, format = "latex", caption = "Indicator estimates, by type and treatment, four clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_four_cluster.tex")
-x=kable(twoclusteroverall, format = "latex", caption = "Indicator estimates, by type, two clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_two_cluster_overall.tex")
-x=kable(fourclusteroverall, format = "latex", caption = "Indicator estimates, by type, four clusters", booktabs = TRUE, digits=2, escape=F) %>% save_kable("tables/indicators_by_types_four_clusteroverall.tex")
-
-
-as.pdf(twocluster, stem="indicators_by_types_two_cluster")
-file.rename(from="indicators_by_types_two_cluster.pdf",to="./tables/indicators_by_types_two_cluster.pdf")
-
-as.pdf(fourcluster, stem="indicators_by_types_four_cluster")
-file.rename(from="indicators_by_types_four_cluster.pdf",to="./tables/indicators_by_types_four_cluster.pdf")
-
-as.pdf(twoclusteroverall, stem="indicators_by_types_two_cluster_overall")
-file.rename(from="indicators_by_types_two_cluster_overall.pdf",to="./tables/indicators_by_types_two_cluster_overall.pdf")
-
-as.pdf(fourclusteroverall, stem="indicators_by_types_four_cluster_overall")
-file.rename(from="indicators_by_types_four_cluster_overall.pdf",to="./tables/indicators_by_types_four_cluster_overall.pdf")
-
-
-# # generating tables with 90% confidence intervals
-# 
-# library(dplyr)
-# library(reshape)
-# library(tibble)
-# individual_indicator_estimates<-as.data.frame(individual_indicator_estimates)
-# ff_2 <- melt(individual_indicator_estimates[,c("fourcluster","treatment","speed","precision","bias_a","stay")], id.vars=c("fourcluster"), na.rm=TRUE)
-# cast_ff_2<-cast(ff_2, variable ~ fourcluster, function(x) c(mean(x), quantile(x,c(0.05,0.95))))
-
-
-```
-
-
-# POST ESTIMATION
-## doing graphs of post-estimated choices over time using mean parameters of mixed models
-
-```{r}
-draws_rev_mix_fit_barre   <- read_csv("./results/draws__rev_mix__fit_gen_barre.csv")
-draws_rev_mix_fit_chiffre <- read_csv("./results/draws__rev_mix__fit_gen_chiffre.csv")
-draws_rev_mix_fit_exp2    <- read_csv("./results/draws__rev_mix__fit_gen_exp2.csv")
-
-# for experiment 1
-  options <- read_csv("data/menus_cs_exp1.csv")
-  options<-matrix(unlist(options), ncol=6,)
-  J<-length(options[,1]) #(nr of menus)
-  effect<-"attr"
-
-    # graphical treatment
-    treatment<-"exp1_barre"
-    ndraws<-length(draws_rev_mix_fit_barre$alpha)
-    N<-round(1000000/J,0) # number of draws to take up
-    selected<-sample(ndraws, N, replace=TRUE)
-    draws <- draws_rev_mix_fit_barre[selected,c(4:8,14,16)] 
-  
-    # numeric treatment
-    treatment<-"exp1_chiffre"
-    ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
-    N<-round(1000000/J,0) # number of draws to take up
-    selected<-sample(ndraws, N, replace=TRUE)
-    draws <- draws_rev_mix_fit_chiffre[selected,c(4:8,14,16)]
-
-# for experiment 2
-
-  treatment<-"exp2"
-  
-  options <- read_csv("./data/menus_cs_exp2.csv")
-  options_a<-options[1:12,]
-  options_s<-options[13:24,]
-  options_c<-options[25:36,]
-  
-  # then choose what effect to look at
-  effect<-"attr"
-  options<-options_a
-  # or
-  effect<-"sim"
-  options<-options_s
-  # or
-  effect<-"comp"
-  options<-options_c
-  
-  #then
-  
-  options<-matrix(unlist(options), ncol=6,)
-  J<-length(options[,1]) #(nr of menus)
-
-  # if keep all draws, too big matrix, so we select a sample of rows in draws
-  ndraws<-length(draws_rev_mix_fit_exp2$alpha)
-  N<-round(1000000/J,0) # number of draws to take up
-  selected<-sample(ndraws, N, replace=TRUE)
-  draws <- draws_rev_mix_fit_exp2[selected,c(4:8,14,16)] 
-
-```
-
-
-```{r}
-# then generate rt post based on parameter estimates, given a choice above
-
-# what parameters
-k<-1
-tau_sim<-0.1 # to introduce random choices at beginning
-
-
-l<-1
-
-
-rt_test<-matrix(data=NA,nrow=J*N,ncol=15)
-for (j in (1:J)){
-for (i in (1:N)){
-  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-1;
-  rt_test[((l-1)*N*J+(i+N*(j-1))),5:8]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
-  rt_test[((l-1)*N*J+(i+N*(j-1))),9:14]<-options[j,];
-  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-lba_rng(options[j,],k,draws$mu_I[i],draws$mu_m[i],draws$mu_lam[i],draws$mu_gamma[i],draws$mu_beta[i],draws$mu_stay[i],tau_sim,draws$alpha[i])
-  }
-}
-
-# save rttest depending on situation chosen above
-write.csv(rt_test,file=paste("./results/post_estimates_",treatment,"_",effect,".csv",sep=""), row.names = FALSE)
-```
-
-
-## graphing post_estimates
-
-```{r}
-
-# choose among:
-
-effect<-"attr"
-effect<-"sim"
-effect<-"comp"
-treatment<-"exp1_barre"
-treatment<-"exp1_chiffre"
-treatment<-"exp2"
-
-rt_test<-read.csv(paste("./results/post_estimates_",treatment,"_",effect,".csv",sep=""))
-
-#then
-
-# get rid of no choices
-length(rt_test[rt_test[,1]<1,])
-length(rt_test)
-#rt_test<-rt_test[rt_test[,1]<1,]
-1-length(rt_test[rt_test[,1]<1,])/length(rt_test)
-
-# we compute how many switch in choices there are by looking at how many t2=1 there are, in proportions (those are no switch)
-1-length(rt_test[rt_test[,3]==1,1])/length(rt_test[,1]) 
-
-
-# checking the shares
-
-
-# first choices
-table_ex_xtabs1 <- xtabs(~V2, data=rt_test)
-table_ex_xtabs1/(J*N)
-
-# second choices, by menu
-table_ex_xtabs2 <- xtabs(~V4, data=rt_test)
-table_ex_xtabs2/(J*N)
-
-# choice shares over time
-# do graphs using # share choice function in "model and simulation"
-memory.limit() 
-memory.limit(40000)
-share_graph(rt_test,paste(treatment,"_",effect,sep=""))
-
-# still need to do transition tables
-# for this go to step 1 and choose to save tables in Postestimated_graphs
-
-```
-
-## ALTERNATIVE TO CHECK THERE IS NO DIFFERENCE WHETHER WE USE MEAN INDIVIDUAL ESTIMATES OR A DRAW OF INDIVIDUAL ESTIMATES
-## doing graphs of post-estimated choices over time using individual parameters of mixed models
-
-```{r}
-
-draws_rev_mix_fit_barre   <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_barre.csv")
-draws_rev_mix_fit_chiffre <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_chiffre.csv")
-draws_rev_mix_fit_exp2    <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_exp2.csv")
-
-# for experiment 1
-options <- read_csv("menus_cs_exp1.csv")
-options<-matrix(unlist(options), ncol=6,)
-J<-length(options[,1]) #(nr of menus)
-effect<-"attraction"
-
-# if barre
-treatment<-"exp1_barre"
-indiv<-63
-draws<-draws_rev_mix_fit_barre[,c(4:8,14,16)]
-ndraws<-length(draws_rev_mix_fit_barre$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
-
-# if chiffre
-treatment<-"exp1_chiffre"
-indiv<-48
-draws<-draws_rev_mix_fit_chiffre[,c(4:8,14,16)]
-ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
-
-# for experiment 2
-
-treatment<-"exp2"
-
-options <- read_csv("menus_cs_exp2.csv")
-options_a<-options[1:12,]
-options_s<-options[13:24,]
-options_c<-options[25:36,]
-
-# then either
-effect<-"attraction"
-options<-options_a
-# or
-effect<-"similarity"
-options<-options_s
-# or
-effect<-"compromise"
-options<-options_c
-
-
-options<-matrix(unlist(options), ncol=6,)
-J<-length(options[,1]) #(nr of menus)
-
-indiv<-198
-draws<-draws_rev_mix_fit_exp2[,c(4:8,14,16)]
-ndraws<-length(draws_rev_mix_fit_exp2$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
-
-
-
-
-
-
-# then extract parameters
-
-draws_id_alpha <- as.matrix(draws_id[,1])
-draws_id_I <- as.matrix(draws_id[,c((2):(1+indiv))])
-draws_id_m <- as.matrix(draws_id[,c((2+indiv):(1+2*indiv))])
-draws_id_lam <- as.matrix(draws_id[,c((2+2*indiv):(1+3*indiv))])
-draws_id_gamma <- as.matrix(draws_id[,c((2+3*indiv):(1+4*indiv))])
-draws_id_beta <- as.matrix(draws_id[,c((2+4*indiv):(1+5*indiv))])
-draws_id_stay <- as.matrix(draws_id[,c((2+5*indiv):(1+6*indiv))])
-
-View(draws_id_I)
-
-
-# what parameters
-k<-1
-tau_sim<-0.01 # to introduce random choices at beginning
-# if keep all draws, too big matrix
-
-
-
-
-rt_test<-matrix(data=NA,nrow=J*N*indiv,ncol=15)
-for(l in (1:indiv)){
-for (j in (1:J)){
-for (i in (1:N)){
-  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-1;
-  rt_test[((l-1)*N*J+(i+N*(j-1))),5:8]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
-  rt_test[((l-1)*N*J+(i+N*(j-1))),9:14]<-options[j,];
-  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-lba_rng(options[j,],k,draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l],draws_id_stay[i,l],tau_sim,draws_id_alpha[i])
-  }
-}
-}
-
-
-# save rttest depending on situation as
-rt_test_exp1_barre_attr<-rt_test
-rt_test_exp1_chiffre_attr<-rt_test
-rt_test_exp2_attr<-rt_test
-rt_test_exp2_sim<-rt_test
-rt_test_exp2_comp<-rt_test
-
-#summary(rt_test)
-#View(rt_test)
-#hist(rt_test[,1],probability=T)
-
-# get rid of no choices
-length(rt_test[rt_test[,1]<1,])
-length(rt_test)
-#rt_test<-rt_test[rt_test[,1]<1,]
-1-length(rt_test[rt_test[,1]<1,])/length(rt_test)
-
-# we compute how many switch in choices there are by looking at how many t2=1 there are, in proportions (those are no switch)
-1-length(rt_test[rt_test[,3]==1,1])/length(rt_test[,1]) 
-
-
-# checking the shares
-
-
-# first choices
-table_ex_xtabs1 <- xtabs(~V2, data=rt_test)
-table_ex_xtabs1/(J*N*indiv)
-
-# second choices, by menu
-table_ex_xtabs2 <- xtabs(~V4, data=rt_test)
-table_ex_xtabs2/(J*N*indiv)
-
-# choice shares over time
-# do graphs using # share choice function in "data and regression"
-memory.limit() 
-memory.limit(40000)
-share_graph(rt_test,paste(treatment,"_",effect,sep=""))
-
-# still need to do transition tables
-# for this go to step 1 and choose to save tables in Postestimated_graphs
-
-```
-
-## alternative way to compute speed, precision and bias using draws of individual parameters of mixed models and example options
-
-```{r}
-
-draws_rev_mix_fit_barre   <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_barre.csv")
-draws_rev_mix_fit_chiffre <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_chiffre.csv")
-draws_rev_mix_fit_exp2    <- read_csv("./Mixed_estimates/draws__rev_mix__fit_gen_exp2.csv")
-
-# choose what options to do among the three
-
-
-effect<-"attraction"
-options<-options_a
-
-#or
-
-effect<-"similarity"
-options<-options_s
-
-#or
-
-effect<-"compromise"
-options<-options_c
-
-
-#then
-
-options<-matrix(unlist(options), ncol=6,)
-J<-length(options[,1]) #(nr of menus)
-
-# if barre
-treatment<-"exp1_barre"
-indiv<-63
-ndraws<-length(draws_rev_mix_fit_barre$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
-
-# if chiffre
-treatment<-"exp1_chiffre"
-indiv<-48
-ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
-
-# for experiment 2
-
-treatment<-"exp2"
-indiv<-198
-ndraws<-length(draws_rev_mix_fit_exp2$alpha)
-N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
-draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
-
-
-
-
-
-
-# then extract parameters
-
-draws_id_alpha <- as.matrix(draws_id[,1])
-draws_id_I <- as.matrix(draws_id[,c((2):(1+indiv))])
-draws_id_m <- as.matrix(draws_id[,c((2+indiv):(1+2*indiv))])
-draws_id_lam <- as.matrix(draws_id[,c((2+2*indiv):(1+3*indiv))])
-draws_id_gamma <- as.matrix(draws_id[,c((2+3*indiv):(1+4*indiv))])
-draws_id_beta <- as.matrix(draws_id[,c((2+4*indiv):(1+5*indiv))])
-draws_id_stay <- as.matrix(draws_id[,c((2+5*indiv):(1+6*indiv))])
-
-#View(draws_id_I)
-
-
-# what parameters
-k<-1
-tau_sim<-0.01 # to introduce random choices at beginning
-# if keep all draws, too big matrix
-
-i<-j<-l<-1
-draws_id_m[i,l]
-
-c(options[j,],k,draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l])
-
-getDrifts(options[j,],draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l])
-
-
-rt_test<-matrix(data=NA,nrow=J*N*indiv,ncol=21)
-for(l in (1:indiv)){
-for (j in (1:J)){
-for (i in (1:N)){
-  rt_test[((l-1)*N*J+(i+N*(j-1))),1:4]<-c(i,j,l,((l-1)*N*J+(i+N*(j-1))));
-  rt_test[((l-1)*N*J+(i+N*(j-1))),5:10]<-options[j,];
-  rt_test[((l-1)*N*J+(i+N*(j-1))),11:13]<-getDrifts(options[j,],draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l]); #drifts first choice  
-  rt_test[((l-1)*N*J+(i+N*(j-1))),14]<-(draws_id_I[i,l]+0.15*draws_id_gamma[i,l])/gamma(1+1/draws_id_alpha[i]); #this is speed if there was a value difference of 0.6/4 between options, as between T and D
-  rt_test[((l-1)*N*J+(i+N*(j-1))),15]<-((draws_id_I[i,l]+0.15*draws_id_gamma[i,l])/max(draws_id_I[i,l]-0.15*draws_id_gamma[i,l],0.00000000001))^draws_id_alpha[i]/(1+((draws_id_I[i,l]+0.15*draws_id_gamma[i,l])/max(draws_id_I[i,l]-0.15*draws_id_gamma[i,l],0.00000000001))^draws_id_alpha[i]); #this is precision if there was a value difference of 0.6/4. Note need to set =1 if second is negative
-  rt_test[((l-1)*N*J+(i+N*(j-1))),16:18]<-(getDrifts(options[j,],draws_id_I[i,l],draws_id_m[i,l],draws_id_lam[i,l],draws_id_gamma[i,l],draws_id_beta[i,l])-draws_id_I[i,l])/draws_id_gamma[i,l]; # this is the value differences   
-  rt_test[((l-1)*N*J+(i+N*(j-1))),19]<-sd(rt_test[((l-1)*N*J+(i+N*(j-1))),18:20]); # this is bias
-  rt_test[((l-1)*N*J+(i+N*(j-1))),20]<-draws_id_stay[i,l]; # this is the stay parameter
-  rt_test[((l-1)*N*J+(i+N*(j-1))),21]<-draws_id_alpha[i]; # this is the alpha parameter
-}
-}
-}
-
-rt_test[,19]<-rowSds(as.matrix(rt_test[,16:18]))
-
-# then take averages for each individual, stored in column 3
-rt_test<-as.tibble(rt_test)
-
-rt_test_means <- rt_test %>%
-  group_by(V3) %>%
-  summarise_all(mean)  
-
-data<-cbind(rt_test_mean[rt_test_mean$treatment==1,c("speed","precision","bias_a","stay")],rt_test_means[,c(14,15,19,20)])
-
-plot(data$bias, data$V19, pch = 19, col = "lightblue")
-plot(data$speed, data$V14, pch = 19, col = "lightblue")
-plot(data$precision, data$V15, pch = 19, col = "lightblue")
-plot(data$stay, data$V20, pch = 19, col = "lightblue")
-
-
-
-
-```
