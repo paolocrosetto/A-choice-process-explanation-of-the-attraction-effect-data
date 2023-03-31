@@ -10,7 +10,7 @@ editor_options:
 ## doing simulations of choice, generating tables and figures
 
 ```{r}
-## Menus of options for simulations
+##  Menus of options for simulations
 
 # menu of options
 
