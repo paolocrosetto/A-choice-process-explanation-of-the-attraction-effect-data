@@ -2,7 +2,6 @@
 # stan_version_minor = 28
 # stan_version_patch = 2
 # model = mlba_single_v8_Frechet_generalized_model
-# start_datetime = 2023-03-31 08:59:49 UTC
 # method = variational
 #   variational
 #     algorithm = meanfield (Default)
@@ -30,8 +29,5 @@
 #   sig_figs = -1 (Default)
 #   profile_file = C:/Users/alescia/Dropbox/Research/GitHub Feedback Emotions/A-choice-process-explanation-of-the-attraction-effect-data/MLBA-R model/./mlba_single_v8_Frechet_generalized-profile-1.csv
 # num_threads = 1 (Default)
-# stanc_version = stanc3 v2.28.1
-# stancflags = --name=mlba_single_v8_Frechet_generalized_model
-lp__,log_p__,log_g__,I,m,lam,gamma,beta,alpha,k,tau,delta
-# Stepsize adaptation complete.
-# eta = 1
+# iter,time_in_seconds,ELBO
+100,10.551,-5760.7

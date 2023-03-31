@@ -317,7 +317,7 @@ treatment<-"exp1_barre"
 indiv<-63
 ndraws<-length(draws_rev_mix_fit_barre$alpha)
 N<-round(1000000/indiv/J,0) # number of draws to take up
-selected<-sample(ndraws, N)
+selected<-sample(ndraws, N, replace = TRUE)
 draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))] 
 
 # if chiffre
@@ -325,7 +325,7 @@ draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))]
 # indiv<-48
 # ndraws<-length(draws_rev_mix_fit_chiffre$alpha)
 # N<-round(1000000/indiv/J,0) # number of draws to take up
-# selected<-sample(ndraws, N)
+# selected<-sample(ndraws, N, replace = TRUE)
 # draws_id <- draws_rev_mix_fit_chiffre[selected,c(16:(6*indiv+16))]
 
 # for experiment 2
@@ -334,7 +334,7 @@ draws_id <- draws_rev_mix_fit_barre[selected,c(16:(6*indiv+16))]
 # indiv<-198
 # ndraws<-length(draws_rev_mix_fit_exp2$alpha)
 # N<-round(1000000/indiv/J,0) # number of draws to take up
-# selected<-sample(ndraws, N)
+# selected<-sample(ndraws, N, replace = TRUE)
 # draws_id <- draws_rev_mix_fit_exp2[selected,c(16:(6*indiv+16))] 
 
 # then extract parameters
@@ -391,10 +391,7 @@ rt_test_means <- rt_test %>%
 
 data<-cbind(rt_test_mean[rt_test_mean$treatment==1,c("speed","precision","bias_a","stay")],rt_test_means[,c(14,15,19,20)])
 
-plot(data$bias, data$V19, pch = 19, col = "lightblue")
-plot(data$speed, data$V14, pch = 19, col = "lightblue")
-plot(data$precision, data$V15, pch = 19, col = "lightblue")
-plot(data$stay, data$V20, pch = 19, col = "lightblue")
+
 
 
 

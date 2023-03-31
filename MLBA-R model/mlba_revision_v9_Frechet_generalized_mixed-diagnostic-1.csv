@@ -1,0 +1,32 @@
+# stan_version_major = 2
+# stan_version_minor = 28
+# stan_version_patch = 2
+# model = mlba_revision_v9_Frechet_generalized_mixed_model
+# method = variational
+#   variational
+#     algorithm = meanfield (Default)
+#       meanfield
+#     iter = 10000 (Default)
+#     grad_samples = 1 (Default)
+#     elbo_samples = 100 (Default)
+#     eta = 1 (Default)
+#     adapt
+#       engaged = 1 (Default)
+#       iter = 50 (Default)
+#     tol_rel_obj = 0.0050000000000000001
+#     eval_elbo = 100 (Default)
+#     output_samples = 2000
+# id = 1 (Default)
+# data
+#   file = C:/Users/alescia/AppData/Local/Temp/Rtmp4Kk0YG/standata-1a98a40e94.json
+# init = C:/Users/alescia/AppData/Local/Temp/Rtmp4Kk0YG/init-1-1a9870e51f01.json
+# random
+#   seed = 2046605671
+# output
+#   file = C:/Users/alescia/Dropbox/Research/GitHub Feedback Emotions/A-choice-process-explanation-of-the-attraction-effect-data/MLBA-R model/././results/rev_mix_fit_gen_barre_1-1.csv
+#   diagnostic_file = C:/Users/alescia/Dropbox/Research/GitHub Feedback Emotions/A-choice-process-explanation-of-the-attraction-effect-data/MLBA-R model/./mlba_revision_v9_Frechet_generalized_mixed-diagnostic-1.csv
+#   refresh = 100 (Default)
+#   sig_figs = -1 (Default)
+#   profile_file = C:/Users/alescia/Dropbox/Research/GitHub Feedback Emotions/A-choice-process-explanation-of-the-attraction-effect-data/MLBA-R model/./mlba_revision_v9_Frechet_generalized_mixed-profile-1.csv
+# num_threads = 1 (Default)
+# iter,time_in_seconds,ELBO

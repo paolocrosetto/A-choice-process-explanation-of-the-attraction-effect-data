@@ -236,7 +236,7 @@ beta2<-rep(beta,NUM_INDIV)
 stay2<-rep(stay,NUM_INDIV)
 ```
 
-## regressions for first choices only (this can take quite a while!)
+## regressions for first choices only (this can take quite a while, so not run as a default!)
 
 ```{r eval=FALSE, include=FALSE}
 for (i in (1:nchains)){
@@ -260,7 +260,7 @@ fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_fit_late
 }
 ```
 
-## regressions including revisions in choices (this can take quite a while!)
+## regressions including revisions in choices (this can take quite a while so not run as a default!)
 
 ```{r eval=FALSE, include=FALSE}
 for (i in (1:nchains)){
@@ -283,7 +283,7 @@ fit$save_latent_dynamics_files(dir = , basename = paste("./results/post_rev_fit_
 }
 ```
 
-## Regressions with revisions in choice and mixed effects (this can take quite a while!)
+## Regressions with revisions in choice and mixed effects (this can take quite a while so not run as a default!)
 
 ```{r eval=FALSE, include=FALSE}
 
