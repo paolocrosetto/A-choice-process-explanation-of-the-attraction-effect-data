@@ -60,7 +60,7 @@ To run the simulations and model estimation you need `R` and the following packa
 
 -   `rstan` and `cmdstanr` -- for Bayesian modeling and inference.
 
--   `cmdstanr`must be installed from https://github.com/stan-dev/cmdstanr as explained at     https://mc-stan.org/r-packages/
+-   `cmdstanr`must be installed from <https://github.com/stan-dev/cmdstanr> as explained at <https://mc-stan.org/r-packages/>
 
 -   `posterior` and `bayesplot` -- for posterior analysis and plotting results
 
