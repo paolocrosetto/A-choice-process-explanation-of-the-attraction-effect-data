@@ -88,7 +88,7 @@ rts_chifr<-rts_exp1[rts_exp1$treatment==1,1:15]
 ```{r}
 # experiment 2
 
-First_two_choices <- read.csv2("./data/First_two_choices_exp2.csv", sep=",")
+First_two_choices <- read.csv2("data/first_two_choices_exp2.csv", sep=",")
 describe(First_two_choices)
 
 
