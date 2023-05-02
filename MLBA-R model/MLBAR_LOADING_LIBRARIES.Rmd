@@ -7,7 +7,7 @@ editor_options:
 # Cleaning and loading packages
 
 ```{r cleaning and libraries}
-setwd("./MLBA-R model")
+setwd("MLBA-R model")
 rm(list=ls())
 
 # loading rstan
@@ -44,10 +44,9 @@ library(bayesplot)
 
 # loading other necessary libraries
 
-library(dplyr)
+library(tidyverse)
 library(GGally)
 library(ggbeeswarm)
-library(ggplot2)
 library(ggtext)
 library(gt)
 library(Hmisc)
@@ -67,10 +66,7 @@ library(reshape)
 library(R.utils)
 library(stats)
 library(stringr)
-library(tibble)
 library(tictoc)
-library(tidyr)
-library(tidyverse)
 library(tikzDevice)
 
 
